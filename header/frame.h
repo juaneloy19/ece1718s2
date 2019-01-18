@@ -50,6 +50,7 @@ public:
 	void pad_for_block_size(unsigned int i);
 	void pad_width(unsigned int n);
 	void pad_height(unsigned int n);
+
 	unsigned int get_width() 	const { return m_width; }
 	unsigned int get_height() 	const { return m_height; }
 	
@@ -126,7 +127,12 @@ public:
 	{
 		return abs(mv.x) + abs(mv.y);
 	}
-	
+//Juan
+	static int GetCachePos(unsigned cur_pos, int r);
+	static int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset);
+//	static std::pair<int, int> PFrame::StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size);
+//
+
 private:
 
 	static std::tuple<unsigned int, ByteMatrix, MV_T> search_for_best_ref (
@@ -138,13 +144,23 @@ private:
 		unsigned int qp,
 		bool fast_me,
 		const MV_T& last_mv );
-	
+//Juan
+	static std::tuple<unsigned int, ByteMatrix, MV_T> search_for_best_ref_hw(
+		const COORD_T& cur_coord,
+		const ByteMatrix& cur_block,
+		const std::deque<Frame>& ref_frames,
+		int r,
+		unsigned int block_size,
+		unsigned int qp,
+		bool fast_me,
+		const MV_T& last_mv);
+
 	unsigned int m_block_size;
 	unsigned int m_frame_width;
 	unsigned int m_frame_height;
 	PF_REF_VEC_T m_mv_and_residuals;
 };
-
+//
 typedef int INTRA_MODE_T;
 typedef std::pair< INTRA_MODE_T, ResidualBlock > IF_REF_T;
 typedef std::vector< IF_REF_T > IF_REF_VEC_T;

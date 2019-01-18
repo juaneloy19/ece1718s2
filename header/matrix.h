@@ -53,11 +53,11 @@ public:
 	
 	ByteMatrix generate_intra_mode_refblock(BYTE_T intra_mode);
 	static ByteMatrix generate_border_block(BYTE_T core_byte, BYTE_T border_byte, unsigned int width, unsigned int height);
-	
+	std::vector< BYTEVEC_T > m_matrix;
 private:
 	unsigned int m_width;
 	unsigned int m_height;
-	std::vector< BYTEVEC_T > m_matrix;
+
 };
 
 typedef std::pair<COORD_T, ByteMatrix> BLOCK_T;

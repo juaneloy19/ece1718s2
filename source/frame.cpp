@@ -484,6 +484,147 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref (
 	return std::make_tuple(min_cost, best_ref_block, res_mv);
 }
 
+int PFrame::GetCachePos(unsigned cur_pos, int r) {
+	int offset = 0;
+	for (int i = 0; i < r; i) {//Check neg direction
+		if (cur_pos + i * -1) {
+			offset = cur_pos + i * -1;
+			return offset;
+		}
+	}
+	for (int i = 0; i < r; i) {//Check pos direction
+		if (cur_pos + i) {
+			offset = cur_pos + i;
+		}
+	}
+	return offset;
+}
+int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset) {
+	int latch1 = 0;
+	int latch2 = 0;
+	int latch3 = 0;
+	int PE = 0;
+	for (int i = 0; i < block_size; i++) {
+		for (int j = 0; j < block_size; j++) {
+			latch1 = a[i][j] - b[i][j + offset];
+			latch2 = abs(latch1);
+			latch3 = latch3 + latch2;
+		}
+	}
+	PE = latch3;
+	return PE;
+}
+//std::pair<int, int>PFrame::StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size) {
+std::pair<int, int> StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size) {
+	int PE[16] = { 0 };
+	int BestCost = 99999999;
+	std::pair<int, int> BestMV;
+	std::pair<int, int> MV;
+	for (int i = 0; i < cache_height - block_size; i++) {
+		for (int j = 0; j < cache_width - block_size; j += block_size) {
+			for (int z = 0; z < 16; z++)//Make it config
+				if (j + z + block_size > cache_width) {
+					MV = search_vectors.pop();
+					PE[z] = PFrame::ME(cache, cur_block, block_size, j + z);
+					BestMV = (PE[z] < BestCost) ? MV : BestMV;
+					BestCost = (PE[z] < BestCost) ? PE[z] : BestCost;
+				}
+		}
+	}
+	return  BestMV;
+}
+
+
+std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
+	const COORD_T& cur_coord,
+	const ByteMatrix& cur_block,
+	const std::deque<Frame>& ref_frames,
+	int r,
+	unsigned int block_size,
+	unsigned int qp,
+	bool fast_me,
+	const MV_T& last_mv)
+{
+	static int search_i, search_j, i_x, i_y;
+
+	unsigned int min_cost = 0;
+	int cache_startX = 0;
+	int cache_startY = 0;
+	ByteMatrix best_ref_block;
+	ByteMatrix Host_cache;
+	unsigned int cache_width;
+	unsigned int cache_height;
+	std::pair<int, int> mv_result;
+
+	MV_T res_mv;
+
+	for (unsigned int iref = 0; iref < ref_frames.size(); ++iref)
+	{
+		SearchQ search_vectors;
+		//calculate offset
+		cache_startX = GetCachePos(cur_coord.second, r);
+		cache_startY = GetCachePos(cur_coord.first, r);
+		for (search_i = -r; search_i <= r; ++search_i)
+		{
+			for (search_j = -r; search_j <= r; ++search_j)
+			{
+				search_vectors.push(std::make_pair(search_i+ cache_startY, search_j+ cache_startX));
+			}
+		}
+		//Load cache
+		cache_width = (r * 2) + 1;
+		cache_height = (r * 2) + 1;
+		ByteMatrix ME_cache(0,cache_width, cache_height);
+		COORD_T cache_coord(cache_startY, cache_startX);
+		Host_cache = ref_frames[iref].get_y_block_at(cache_coord, cache_width);
+		for (int i = 0; i < cache_height; i++) {
+			for (int j = 0; j < cache_width; j=j+8) {
+				if (j > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j];
+				}
+				if (j + 1 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 1];
+				}
+				if (j + 2 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 2];
+				}
+				if (j + 3 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 3];
+				}
+				if (j + 4 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 4];
+				}
+				if (j + 5 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 5];
+				}
+				if (j + 6 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 6];
+				}
+				if (j + 7 > cache_width) {
+					ME_cache.m_matrix[i][j] = Host_cache[i][j + 7];
+				}
+			}
+		}
+		//Load cache
+		//START ME
+		mv_result = StartME(ME_cache, cur_block, search_vectors, cache_width, cache_height,block_size);
+		COORD_T search_coord(cur_coord.first + mv_result.first, cur_coord.second + mv_result.second);
+		ByteMatrix ref_block = ref_frames[iref].get_y_block_at(search_coord, block_size);
+		MV_T search_mv;
+		search_mv.y = mv_result.first;
+		search_mv.x = mv_result.second;
+		unsigned int mv_bytes = (search_mv == last_mv) ? 0 : sizeof(MV_T);
+		unsigned int cost = ResidualBlock::estimate_rd_cost(cur_block, ref_block, qp, mv_bytes);
+		best_ref_block = ref_block;
+		res_mv = search_mv;
+		res_mv.i = iref;
+		min_cost = cost;
+	}
+
+	return std::make_tuple(min_cost, best_ref_block, res_mv);
+}
+
+
 PFrame::PFrame(const Frame& cur_frame, const std::deque<Frame>& ref_frames, unsigned int i, int r, unsigned int qp)
 : m_block_size(i), m_frame_width(cur_frame.get_width()), m_frame_height(cur_frame.get_height())
 {
