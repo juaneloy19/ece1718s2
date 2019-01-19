@@ -6,10 +6,12 @@
 #include <iomanip>
 #include <cmath>
 #include <ctime>
+#include <string>
 
 #include "util.h"
 #include "matrix.h"
 #include "frame.h"
+#include "global_variable.h"
 
 BYTEVEC_T read_byte_istream(std::istream& in)
 {
@@ -147,6 +149,10 @@ int main(int argc, char* argv[])
 	for (auto cur_frame : frames)
 	{	
 		clock_t frame_begin = std::clock();
+#ifdef JUAN_DEBUG
+		std::string filename = "p_mb_info_" + std::to_string(iframe) + ".txt";
+		p_mb_info.open(filename);
+#endif
 		
 		std::cout << std::setw(6) << iframe;
 		cur_frame.pad_for_block_size(block_size);
@@ -233,6 +239,9 @@ int main(int argc, char* argv[])
 		}
 		
 		++iframe;
+#ifdef JUAN_DEBUG
+		p_mb_info.close();
+#endif
 	}
 	std::cout << std::endl;
 	real_outfile.close();

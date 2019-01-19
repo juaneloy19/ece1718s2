@@ -6,6 +6,8 @@
 #ifndef _FRAME_H
 #define _FRAME_H
 
+extern std::ofstream p_mb_info;
+
 /* Forward declaration of PFrame and an identifier to use in the bytestreams */
 class PFrame;
 const BYTE_T PFRAME_ID = 0x00;

@@ -631,9 +631,11 @@ PFrame::PFrame(const Frame& cur_frame, const std::deque<Frame>& ref_frames, unsi
 	assert(ref_frames[0].get_width() == m_frame_width);
 	assert(ref_frames[0].get_height() == m_frame_height);
 	
-	bool fast_me, vbs_enable;
+	bool fast_me, vbs_enable, hw_enable;
 	CFG_LOAD_OPT_DEFAULT("FastFME", fast_me, false);
 	CFG_LOAD_OPT_DEFAULT("VBSEnable", vbs_enable, false);
+	CFG_LOAD_OPT_DEFAULT("HwModeEnable", hw_enable, false);
+
 	
 	MV_T last_mv;
 	
@@ -649,8 +651,13 @@ PFrame::PFrame(const Frame& cur_frame, const std::deque<Frame>& ref_frames, unsi
 		unsigned int min_full_cost = 0, min_split_cost = std::numeric_limits<unsigned int>::max();
 		ByteMatrix best_full_ref_block;
 		MV_T full_res_mv;
-		std::tie(min_full_cost, best_full_ref_block, full_res_mv) = PFrame::search_for_best_ref ( cur_coord, cur_block, ref_frames, r, m_block_size, qp, fast_me, last_mv );
-		
+		if(hw_enable)
+			std::tie(min_full_cost, best_full_ref_block, full_res_mv) = PFrame::search_for_best_ref_hw(cur_coord, cur_block, ref_frames, r, m_block_size, qp, fast_me, last_mv);
+		else
+			std::tie(min_full_cost, best_full_ref_block, full_res_mv) = PFrame::search_for_best_ref ( cur_coord, cur_block, ref_frames, r, m_block_size, qp, fast_me, last_mv );
+#ifdef JUAN_DEBUG
+		p_mb_info << "MB_Y: " << cur_coord.first/m_block_size << " MB_X: " << cur_coord.second/m_block_size << " Cost: " << min_full_cost << " MV_Y: " << full_res_mv.y << " MV_X: " << full_res_mv.x << "\n";
+#endif
 		if(vbs_enable && m_block_size > 2 && m_block_size % 2 == 0)
 		{
 			ByteMatrix top_left_block = cur_frame.get_y_block_at(cur_coord, m_block_size / 2);
