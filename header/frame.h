@@ -65,10 +65,10 @@ public:
 	double PSNR(const Frame& rhs) 	const { return y_values.PSNR(rhs.y_values); }
 	double SSIM(const Frame& rhs) 	const { return y_values.SSIM(rhs.y_values); }
 	double SAD(const Frame& rhs) 	const { return y_values.SAD(rhs.y_values); }
-	
+
 private:
 	void init_from_y_blocks(const BLOCKVEC_T& blocks, unsigned int block_size, unsigned int width, unsigned int height, const INT_VEC_T& block_colours);
-	
+
 	unsigned int m_width;
 	unsigned int m_height;
 	ByteMatrix y_values;
@@ -130,7 +130,7 @@ public:
 		return abs(mv.x) + abs(mv.y);
 	}
 //Juan
-	static int GetCachePos(unsigned cur_pos, int r);
+	static int GetCachePos(int cur_pos, int r, int limit);
 	static int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset);
 //	static std::pair<int, int> PFrame::StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size);
 //

@@ -2,7 +2,7 @@ num_frames=10
 frame_width=352
 frame_height=288
 block_size=16
-search_range=128
+search_range=16
 qp=3
 I_Period=10
 
@@ -12,10 +12,11 @@ rdo_estimation=0
 # Enable various debugging files
 debug_res_est=off
 dump_debug_files=off
-debug_csv=off
+debug_csv=on
 debug_colour_blocks=off
 
 # Multiple reference frame and fast motion estimation support
 nRefFrames=1
-FastFME=on
+FastFME=off
 VBSEnable=off
+HwModeEnable=off
