@@ -7,6 +7,10 @@
 #define _FRAME_H
 
 extern std::ofstream p_mb_info;
+extern std::ofstream p_cache_rtl;
+extern std::ofstream p_cache_cmodel;
+
+
 
 /* Forward declaration of PFrame and an identifier to use in the bytestreams */
 class PFrame;
@@ -130,8 +134,8 @@ public:
 		return abs(mv.x) + abs(mv.y);
 	}
 //Juan
-	static int GetCachePos(int cur_pos, int r, int limit);
-	static int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset);
+	static int GetCachePos(int cur_pos, int r, int limit, int block_size);
+	static int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset_x, int offset_y);
 //	static std::pair<int, int> PFrame::StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size);
 //
 

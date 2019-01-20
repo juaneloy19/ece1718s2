@@ -484,28 +484,30 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref (
 	return std::make_tuple(min_cost, best_ref_block, res_mv);
 }
 
-int PFrame::GetCachePos(int cur_pos, int r , int limit) {
+int PFrame::GetCachePos(int cur_pos, int r , int limit, int block_size) {
 	int offset = 0;
-	for (int i = 1; i <= r; i++) {//Check neg direction
+	for (int i = 1; i <= (r/2); i++) {//Check neg direction
 		if ((cur_pos - i ) <= 0) {
 			return 0;
 		}
 	}
-	for (int i = 1; i <= r; i++) {//Check pos direction
-		if ((cur_pos + i) >= limit) {
-			return cur_pos -r + i;
+	for (int i = 1; i <= (r/2); i++) {//Check pos direction
+		if ((cur_pos + block_size + i) >= limit) {
+			return cur_pos -r;
 		}
 	}
 	return cur_pos- (r/2);
 }
-int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset) {
+int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset_x, int offset_y) {
 	int latch1 = 0;
 	int latch2 = 0;
 	int latch3 = 0;
 	int PE = 0;
+	int c;
 	for (int i = 0; i < block_size; i++) {
 		for (int j = 0; j < block_size; j++) {
-			latch1 = a[i][j] - b[i][j + offset];
+			c = b[i+offset_y][j + offset_x];
+			latch1 = a[i][j] - b[i+offset_y][j + offset_x];
 			latch2 = abs(latch1);
 			latch3 = latch3 + latch2;
 		}
@@ -514,17 +516,17 @@ int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset) {
 	return PE;
 }
 
-std::pair<int, int> StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size) {
+std::pair<int, int> StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size, int a, int b) {
 	int PE[16] = { 0 };
 	int BestCost = 99999999;
 	std::pair<int, int> BestMV;
 	std::pair<int, int> MV;
-	for (int i = 0; i < cache_height - block_size; i++) {
+	for (int i = 0; i <= cache_height - block_size; i++) {
 		for (int j = 0; j < cache_width; j += block_size) {
 			for (int z = 0; z < 16; z++)//Make it config
 				if (j + z + block_size <= cache_width) {
 					MV = search_vectors.pop();
-					PE[z] = PFrame::ME(cur_block, cache, block_size, j + z);
+					PE[z] = PFrame::ME(cur_block, cache, block_size, j + z, i);
 					BestMV = (PE[z] < BestCost) ? MV : BestMV;
 					BestCost = (PE[z] < BestCost) ? PE[z] : BestCost;
 				}
@@ -561,13 +563,13 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 	{
 		SearchQ search_vectors;
 		//calculate offset
-		cache_startX = GetCachePos(cur_coord.second, r, ref_frames[iref].get_width());
-		cache_startY = GetCachePos(cur_coord.first, r, ref_frames[iref].get_height());
+		cache_startX = GetCachePos(cur_coord.second, r, ref_frames[iref].get_width(), block_size);
+		cache_startY = GetCachePos(cur_coord.first, r, ref_frames[iref].get_height(), block_size);
 		cache_width = (r * 2);
 		cache_height = (r * 2);
 		//cache_width = (r * 2) + 1;
 		//cache_height = (r * 2) + 1;
-		for (search_i = 0; search_i < cache_height -block_size; ++search_i)
+		for (search_i = 0; search_i <= cache_height -block_size; ++search_i)
 		{
 			for (search_j = 0; search_j <= cache_width -block_size; ++search_j)//May need to change
 			{
@@ -606,9 +608,27 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 				}
 			}
 		}
+#ifdef JUAN_DEBUG
+		int a, b;
+		p_cache_rtl << "MB_Y: "<< cur_coord.first/block_size  << " MB_X:  " << cur_coord.second/block_size << "\n";
+		p_cache_cmodel << "MB_Y: " << cur_coord.first / block_size << " MB_X:  " << cur_coord.second / block_size << "\n";
+
+		for (int i = 0; i < cache_height; i++) {
+			for (int j = 0; j < cache_width; j++) {
+				a = ME_cache.m_matrix[i][j];
+				b = Host_cache.m_matrix[i][j];
+				p_cache_rtl << a << " ";
+				p_cache_cmodel << b << " ";
+			}
+			p_cache_rtl << "\n ";
+			p_cache_cmodel  << "\n ";
+		}
+		p_cache_rtl << "\n";
+		p_cache_cmodel << "\n ";
+#endif
 		//Load cache
 		//START ME
-		mv_result = StartME(ME_cache, cur_block, search_vectors, cache_width, cache_height,block_size);
+		mv_result = StartME(ME_cache, cur_block, search_vectors, cache_width, cache_height,block_size, cur_coord.first, cur_coord.second);
 		COORD_T search_coord(mv_result.first, mv_result.second);
 		ByteMatrix ref_block = ref_frames[iref].get_y_block_at(search_coord, block_size);
 		MV_T search_mv;

@@ -151,7 +151,12 @@ int main(int argc, char* argv[])
 		clock_t frame_begin = std::clock();
 #ifdef JUAN_DEBUG
 		std::string filename = "p_mb_info_" + std::to_string(iframe) + ".txt";
+		std::string filename2 = "p_cache_rtl" + std::to_string(iframe) + ".txt";
+		std::string filename3 = "p_cache_cmodel" + std::to_string(iframe) + ".txt";
+
 		p_mb_info.open(filename);
+		p_cache_rtl.open(filename2);
+		p_cache_cmodel.open(filename3);
 #endif
 		
 		std::cout << std::setw(6) << iframe;
@@ -241,6 +246,9 @@ int main(int argc, char* argv[])
 		++iframe;
 #ifdef JUAN_DEBUG
 		p_mb_info.close();
+		p_cache_rtl.close();
+		p_cache_cmodel.close();
+
 #endif
 	}
 	std::cout << std::endl;
