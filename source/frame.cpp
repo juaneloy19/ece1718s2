@@ -484,7 +484,7 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref (
 	return std::make_tuple(min_cost, best_ref_block, res_mv);
 }
 
-int PFrame::GetCachePos(int cur_pos, int r , int limit, int block_size) {
+int PFrame::GetCachePos(int cur_pos, int r , int limit, int window_width, int block_size) {
 	int offset = 0;
 	for (int i = 1; i <= (r/2); i++) {//Check neg direction
 		if ((cur_pos - i ) <= 0) {
@@ -492,11 +492,13 @@ int PFrame::GetCachePos(int cur_pos, int r , int limit, int block_size) {
 		}
 	}
 	for (int i = 1; i <= (r/2); i++) {//Check pos direction
-		if ((cur_pos + block_size + i) >= limit) {
-			return cur_pos -r;
+		if ((cur_pos + (window_width/2) + i) >= limit) {
+//			return cur_pos -r;
+			return limit - window_width;
 		}
 	}
-	return cur_pos- (r/2);
+	return cur_pos- (block_size/2);
+
 }
 int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset_x, int offset_y) {
 	int latch1 = 0;
@@ -563,12 +565,10 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 	{
 		SearchQ search_vectors;
 		//calculate offset
-		cache_startX = GetCachePos(cur_coord.second, r, ref_frames[iref].get_width(), block_size);
-		cache_startY = GetCachePos(cur_coord.first, r, ref_frames[iref].get_height(), block_size);
 		cache_width = (r * 2);
 		cache_height = (r * 2);
-		//cache_width = (r * 2) + 1;
-		//cache_height = (r * 2) + 1;
+		cache_startX = GetCachePos(cur_coord.second, r, ref_frames[iref].get_width(), cache_width, block_size);
+		cache_startY = GetCachePos(cur_coord.first, r, ref_frames[iref].get_height(), cache_width, block_size);
 		for (search_i = 0; search_i <= cache_height -block_size; ++search_i)
 		{
 			for (search_j = 0; search_j <= cache_width -block_size; ++search_j)//May need to change
@@ -577,7 +577,7 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 			}
 		}
 		//Load cache
-		ByteMatrix ME_cache(0,cache_width, cache_height);
+		ByteMatrix ME_cache(0,cache_height, cache_width);
 		COORD_T cache_coord(cache_startY, cache_startX);
 		Host_cache = ref_frames[iref].get_y_block_at(cache_coord, cache_width);
 		for (int i = 0; i < cache_height; i++) {
@@ -609,7 +609,7 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 			}
 		}
 #ifdef JUAN_DEBUG
-		int a, b;
+/*		int a, b;
 		p_cache_rtl << "MB_Y: "<< cur_coord.first/block_size  << " MB_X:  " << cur_coord.second/block_size << "\n";
 		p_cache_cmodel << "MB_Y: " << cur_coord.first / block_size << " MB_X:  " << cur_coord.second / block_size << "\n";
 
@@ -624,7 +624,7 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 			p_cache_cmodel  << "\n ";
 		}
 		p_cache_rtl << "\n";
-		p_cache_cmodel << "\n ";
+		p_cache_cmodel << "\n ";*/
 #endif
 		//Load cache
 		//START ME

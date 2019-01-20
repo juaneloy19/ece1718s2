@@ -2,7 +2,7 @@ num_frames=10
 frame_width=352
 frame_height=288
 block_size=16
-search_range=16
+search_range=128
 qp=3
 I_Period=10
 
@@ -19,4 +19,4 @@ debug_colour_blocks=off
 nRefFrames=1
 FastFME=off
 VBSEnable=off
-HwModeEnable=off
+HwModeEnable=on

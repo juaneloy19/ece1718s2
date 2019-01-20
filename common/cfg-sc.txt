@@ -2,7 +2,7 @@ num_frames=4
 frame_width=640
 frame_height=576
 block_size=16
-search_range=128
+search_range=16
 qp=3
 I_Period=10
 
@@ -17,5 +17,6 @@ debug_colour_blocks=off
 
 # Multiple reference frame and fast motion estimation support
 nRefFrames=1
-FastFME=on
+FastFME=off
 VBSEnable=off
+HwModeEnable=on
