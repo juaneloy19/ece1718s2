@@ -631,7 +631,7 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 		}
 	}
 #ifdef DUMP_STIM
-	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first - a << " MV_X: "<< BestMV.second -b  << "\n";
+	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first << " MV_X: "<< BestMV.second  << "\n";
 #endif
 
 	return  BestMV;
