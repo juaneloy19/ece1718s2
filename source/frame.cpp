@@ -493,11 +493,13 @@ int PFrame::GetCachePos(int cur_pos, int r , int limit, int window_width, int bl
 	}
 	for (int i = 1; i <= (r/2); i++) {//Check pos direction
 		if ((cur_pos + (window_width/2) + i) >= limit) {
-//			return cur_pos -r;
-			return limit - window_width;
+			return limit - window_width ;
+//		return limit - window_width + 1;
 		}
 	}
-	return cur_pos- (block_size/2);
+//	return cur_pos - (block_size / 2) ;
+
+	return cur_pos- (block_size/2) + 1;
 
 }
 int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset_x, int offset_y) {
@@ -518,22 +520,120 @@ int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset_x, int off
 	return PE;
 }
 
-std::pair<int, int> StartME(ByteMatrix cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size, int a, int b) {
+std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ search_vectors, int cache_width, int cache_height, int block_size, int a, int b) {
 	int PE[16] = { 0 };
 	int BestCost = 99999999;
 	std::pair<int, int> BestMV;
 	std::pair<int, int> MV;
+	ByteMatrix ME_cache(0, cache_height, cache_width);
+	ByteMatrix ME_Cur_Block(0, block_size, block_size);
+#ifdef DUMP_STIM
+	p_MEcur_block_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size << "\n";
+#endif 
+	//LOAD CUR BLOCK
+	for (int i = 0; i < block_size; i++){
+		for (int j = 0; j < block_size; j = j + 8) {
+			ME_Cur_Block.m_matrix[i][j+0] = cur_block.m_matrix[i][j+0];
+			ME_Cur_Block.m_matrix[i][j + 1] = cur_block.m_matrix[i][j + 1];
+			ME_Cur_Block.m_matrix[i][j + 2] = cur_block.m_matrix[i][j + 2];
+			ME_Cur_Block.m_matrix[i][j + 3] = cur_block.m_matrix[i][j + 3];
+			ME_Cur_Block.m_matrix[i][j + 4] = cur_block.m_matrix[i][j + 4];
+			ME_Cur_Block.m_matrix[i][j + 5] = cur_block.m_matrix[i][j + 5];
+			ME_Cur_Block.m_matrix[i][j + 6] = cur_block.m_matrix[i][j + 6];
+			ME_Cur_Block.m_matrix[i][j + 7] = cur_block.m_matrix[i][j + 7];
+#ifdef DUMP_STIM
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 0]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 1]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 2]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 3]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 4]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 5]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 6]) << " ";
+			p_MEcur_block_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[i][j + 7]) << " ";
+#endif 
+
+		}
+#ifdef DUMP_STIM
+		p_MEcur_block_rtl << "\n";
+#endif
+	}
+
+#ifdef DUMP_STIM
+	p_MEcur_block_rtl << "\n";
+	p_MEcache_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size << "\n";
+#endif
+	//LOAD CACHE
+	for (int i = 0; i < cache_height; i++) {
+		for (int j = 0; j < cache_width; j = j + 8) {
+			if (j < cache_width) {
+				ME_cache.m_matrix[i][j] = Host_cache.m_matrix[i][j];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 0]) << " ";
+#endif
+			}
+			if (j + 1 < cache_width) {
+				ME_cache.m_matrix[i][j + 1] = Host_cache.m_matrix[i][j + 1];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 1]) << " ";
+#endif
+			}
+			if (j + 2 < cache_width) {
+				ME_cache.m_matrix[i][j + 2] = Host_cache.m_matrix[i][j + 2];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 2]) << " ";
+#endif
+			}
+			if (j + 3 < cache_width) {
+				ME_cache.m_matrix[i][j + 3] = Host_cache.m_matrix[i][j + 3];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 3]) << " ";
+#endif
+			}
+			if (j + 4 < cache_width) {
+				ME_cache.m_matrix[i][j + 4] = Host_cache.m_matrix[i][j + 4];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 4]) << " ";
+#endif
+			}
+			if (j + 5 < cache_width) {
+				ME_cache.m_matrix[i][j + 5] = Host_cache.m_matrix[i][j + 5];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 5]) << " ";
+#endif
+			}
+			if (j + 6 < cache_width) {
+				ME_cache.m_matrix[i][j + 6] = Host_cache.m_matrix[i][j + 6];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 6]) << " ";
+#endif
+			}
+			if (j + 7 < cache_width) {
+				ME_cache.m_matrix[i][j + 7] = Host_cache.m_matrix[i][j + 7];
+#ifdef DUMP_STIM
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 7]) << " ";
+#endif
+			}
+		}
+		p_MEcache_rtl << "\n";
+	}
+	p_MEcache_rtl << "\n";
+
+	//START PREDICTION
 	for (int i = 0; i <= cache_height - block_size; i++) {
-		for (int j = 0; j < cache_width; j += block_size) {
+		for (int j = 0; j < cache_width ; j += block_size) {
 			for (int z = 0; z < 16; z++)//Make it config
 				if (j + z + block_size <= cache_width) {
 					MV = search_vectors.pop();
-					PE[z] = PFrame::ME(cur_block, cache, block_size, j + z, i);
+					PE[z] = PFrame::ME(ME_Cur_Block, ME_cache, block_size, j + z, i);
 					BestMV = (PE[z] < BestCost) ? MV : BestMV;
 					BestCost = (PE[z] < BestCost) ? PE[z] : BestCost;
 				}
 		}
 	}
+#ifdef DUMP_STIM
+	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first - a << " MV_X: "<< BestMV.second -b  << "\n";
+#endif
+
 	return  BestMV;
 }
 
@@ -565,49 +665,23 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 	{
 		SearchQ search_vectors;
 		//calculate offset
-		cache_width = (r * 2);
-		cache_height = (r * 2);
+		cache_width = (r * 2) -1;
+		cache_height = (r * 2) - 1;
 		cache_startX = GetCachePos(cur_coord.second, r, ref_frames[iref].get_width(), cache_width, block_size);
 		cache_startY = GetCachePos(cur_coord.first, r, ref_frames[iref].get_height(), cache_width, block_size);
 		for (search_i = 0; search_i <= cache_height -block_size; ++search_i)
 		{
 			for (search_j = 0; search_j <= cache_width -block_size; ++search_j)//May need to change
+			//for (search_j = 0; search_j < cache_width - block_size; ++search_j)//May need to change
+
 			{
 				search_vectors.push(std::make_pair(search_i+ cache_startY, search_j+ cache_startX));
 			}
 		}
 		//Load cache
-		ByteMatrix ME_cache(0,cache_height, cache_width);
 		COORD_T cache_coord(cache_startY, cache_startX);
 		Host_cache = ref_frames[iref].get_y_block_at(cache_coord, cache_width);
-		for (int i = 0; i < cache_height; i++) {
-			for (int j = 0; j < cache_width; j=j+8) {
-				if (j < cache_width) {
-					ME_cache.m_matrix[i][j] = Host_cache.m_matrix[i][j];
-				}
-				if (j + 1 < cache_width) {
-					ME_cache.m_matrix[i][j+1] = Host_cache.m_matrix[i][j + 1];
-				}
-				if (j + 2 < cache_width) {
-					ME_cache.m_matrix[i][j+2] = Host_cache.m_matrix[i][j + 2];
-				}
-				if (j + 3 < cache_width) {
-					ME_cache.m_matrix[i][j+3] = Host_cache.m_matrix[i][j + 3];
-				}
-				if (j + 4 < cache_width) {
-					ME_cache.m_matrix[i][j+4] = Host_cache.m_matrix[i][j + 4];
-				}
-				if (j + 5 < cache_width) {
-					ME_cache.m_matrix[i][j+5] = Host_cache.m_matrix[i][j + 5];
-				}
-				if (j + 6 < cache_width) {
-					ME_cache.m_matrix[i][j+6] = Host_cache.m_matrix[i][j + 6];
-				}
-				if (j + 7 < cache_width) {
-					ME_cache.m_matrix[i][j+7] = Host_cache.m_matrix[i][j + 7];
-				}
-			}
-		}
+
 #ifdef JUAN_DEBUG
 /*		int a, b;
 		p_cache_rtl << "MB_Y: "<< cur_coord.first/block_size  << " MB_X:  " << cur_coord.second/block_size << "\n";
@@ -628,7 +702,7 @@ std::tuple<unsigned int, ByteMatrix, MV_T> PFrame::search_for_best_ref_hw(
 #endif
 		//Load cache
 		//START ME
-		mv_result = StartME(ME_cache, cur_block, search_vectors, cache_width, cache_height,block_size, cur_coord.first, cur_coord.second);
+		mv_result = StartME(Host_cache, cur_block, search_vectors, cache_width, cache_height,block_size, cur_coord.first, cur_coord.second);
 		COORD_T search_coord(mv_result.first, mv_result.second);
 		ByteMatrix ref_block = ref_frames[iref].get_y_block_at(search_coord, block_size);
 		MV_T search_mv;

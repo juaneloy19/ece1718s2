@@ -1,5 +1,7 @@
 #include <iostream>
 #include <deque>
+#include  <iomanip>
+
 #include "matrix.h"
 #include "residual.h"
 
@@ -9,6 +11,10 @@
 extern std::ofstream p_mb_info;
 extern std::ofstream p_cache_rtl;
 extern std::ofstream p_cache_cmodel;
+
+extern std::ofstream p_MEcur_block_rtl;
+extern std::ofstream p_MEcache_rtl;
+extern std::ofstream p_MEmv_rtl;
 
 
 

@@ -153,12 +153,18 @@ int main(int argc, char* argv[])
 		std::string filename = "p_mb_info_" + std::to_string(iframe) + ".txt";
 		std::string filename2 = "p_cache_rtl" + std::to_string(iframe) + ".txt";
 		std::string filename3 = "p_cache_cmodel" + std::to_string(iframe) + ".txt";
-
 		p_mb_info.open(filename);
 		p_cache_rtl.open(filename2);
 		p_cache_cmodel.open(filename3);
 #endif
-		
+#ifdef DUMP_STIM
+		std::string filename4 = "p_MEcur_block_rtl_" + std::to_string(iframe) + ".txt";
+		std::string filename5 = "p_MEcache_rtl_rtl_" + std::to_string(iframe) + ".txt";
+		std::string filename6 = "p_MEmv_rtl_" + std::to_string(iframe) + ".txt";
+		p_MEcur_block_rtl.open(filename4);
+		p_MEcache_rtl.open(filename5);
+		p_MEmv_rtl.open(filename6);
+#endif
 		std::cout << std::setw(6) << iframe;
 		cur_frame.pad_for_block_size(block_size);
 		
@@ -248,7 +254,12 @@ int main(int argc, char* argv[])
 		p_mb_info.close();
 		p_cache_rtl.close();
 		p_cache_cmodel.close();
+#endif
 
+#ifdef DUMP_STIM
+		p_MEcur_block_rtl.close();
+		p_MEcache_rtl.close();
+		p_MEmv_rtl.close();
 #endif
 	}
 	std::cout << std::endl;
