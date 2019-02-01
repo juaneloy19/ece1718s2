@@ -1,5 +1,6 @@
 `include "Control.v"
 `include "Mem.v"
+`include "pe.v"
 
 module Me_engine (
   
@@ -83,6 +84,18 @@ module Me_engine (
   //
   
   //Ayan
+   pe_row uPe_row(
+    .clk(clk),
+    .reset(reset),
+    .p(),
+    .p_prime(),
+    .c(),
+    .start(),
+    .done(),
+    .mme(),
+    .m_i(),
+    .m_j()
+   );
   
   //
   
