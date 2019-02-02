@@ -62,10 +62,10 @@ module tb();
  clk = 0;
  reset = 1; // load first operand
  r = 0;
- address_write_ref=0;
- address_write_cur=0;
- write_enable_ref=0;
- write_enable_cur=0;
+ address_write_ref<=0;
+ address_write_cur<=0;
+ write_enable_ref<=0;
+ write_enable_cur<=0;
  @(posedge clk);
  @(posedge clk);
  reset=0;
@@ -91,14 +91,14 @@ module tb();
                         fd1_status = $fscanf( fd, "%x", data1_pixel[count1]);
                         $display ("value %x", data1_pixel[count1]);
                     end
-                    address_write_cur = colC_count/8 + (rowC_count*2);
-                    data_write_cur = {data1_pixel[7], data1_pixel[6],data1_pixel[5], data1_pixel[4],data1_pixel[3], data1_pixel[2],data1_pixel[1], data1_pixel[0]};
-                    write_enable_cur = 1;
+                    address_write_cur <= colC_count/8 + (rowC_count*2);
+                    data_write_cur <= {data1_pixel[7], data1_pixel[6],data1_pixel[5], data1_pixel[4],data1_pixel[3], data1_pixel[2],data1_pixel[1], data1_pixel[0]};
+                    write_enable_cur <= 1;
                     @(posedge clk);
                end
             end
        end
-        write_enable_cur=0;
+        write_enable_cur<=0;
         @(posedge clk);
         wait(done);
         @(posedge clk);
@@ -122,15 +122,15 @@ module tb();
                         fd2_status = $fscanf( fd2, "%x", data2_pixel[count2]);
                         $display ("value %x", data2_pixel[count2]);
                     end
-                    address_write_ref = col_count/8 + (row_count*4);
-                    data_write_ref = {data2_pixel[7], data2_pixel[6],data2_pixel[5], data2_pixel[4],data2_pixel[3], data2_pixel[2],data2_pixel[1], data2_pixel[0]};
-                    write_enable_ref = 1;
+                    address_write_ref <= col_count/8 + (row_count*4);
+                    data_write_ref <= {data2_pixel[7], data2_pixel[6],data2_pixel[5], data2_pixel[4],data2_pixel[3], data2_pixel[2],data2_pixel[1], data2_pixel[0]};
+                    write_enable_ref <= 1;
                     @(posedge clk);
                end
             end
        end
-        write_enable_ref=0;
-        go=1;
+        write_enable_ref<=0;
+        go<=1;
         @(posedge clk);
         wait(done);
         @(posedge clk);

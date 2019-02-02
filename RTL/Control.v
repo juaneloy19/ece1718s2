@@ -43,7 +43,7 @@ module Control (
   
   integer i;
   reg start;
-  
+  reg [1:0] index ;
   reg [max_cache_width-1:0]	cache_width_q;
   reg [max_cache_width-1:0]	cache_width;//devided by 8
   reg [max_cache_width-1:0]	stride;
@@ -84,8 +84,10 @@ module Control (
   assign addrCur = Caddr_cnt;
   assign addrRef = Raddr_cnt;
   assign c = count_q[4] ? c_dat1 : c_dat2;
-  assign p = count_q[4] ? p_dat1 : p_dat2;
-  assign p_prime = count_q[4] ? p_dat2 : p_dat1;
+  //assign p = count_q[4] ? p_dat1 : p_dat2;
+  assign p = count_q[4] ? p_dat2 : p_dat1;
+  assign p_prime = count_q[4] ? p_dat1 : p_dat2;
+  //assign p_prime = count_q[4] ? p_dat2 : p_dat1;
   
   assign update_line1 = (count[3:0]<4)&& cur_state!=IDLE && !switch;
   assign update_line2 = (count[3:0]<4)&& cur_state!=IDLE && switch;
@@ -96,7 +98,7 @@ module Control (
 
   assign cache_height = cache_width;
 
-  assign start=cur_state != IDLE;  
+  assign start=cur_state == START;  
   always @(*) begin
     case(count_q[2:0])
       0:c_dat1 = Curline_buffer1[count_q[3]][7:0];
@@ -125,27 +127,37 @@ module Control (
   
     always @(*) begin
       case(count_q[2:0])
-      	0:p_dat1 = line_buffer1[count_q[3:2]][7:0];
-      	1:p_dat1 = line_buffer1[count_q[3:2]][15:8];
-      	2:p_dat1 = line_buffer1[count_q[3:2]][23:16];
-      	3:p_dat1 = line_buffer1[count_q[3:2]][31:24];
-      	4:p_dat1 = line_buffer1[count_q[3:2]][15:8];
-      	5:p_dat1 = line_buffer1[count_q[3:2]][23:16];
-      	6:p_dat1 = line_buffer1[count_q[3:2]][31:24];
-      	7:p_dat1 = line_buffer1[count_q[3:2]][31:24];
+      	0:p_dat1 = line_buffer1[count_q[4:3]][7:0];
+      	1:p_dat1 = line_buffer1[count_q[4:3]][15:8];
+      	2:p_dat1 = line_buffer1[count_q[4:3]][23:16];
+      	3:p_dat1 = line_buffer1[count_q[4:3]][31:24];
+      	4:p_dat1 = line_buffer1[count_q[4:3]][39:32];
+      	5:p_dat1 = line_buffer1[count_q[4:3]][47:40];
+      	6:p_dat1 = line_buffer1[count_q[4:3]][55:48];
+      	7:p_dat1 = line_buffer1[count_q[4:3]][63:56];
   	  endcase
   	end
   
+    //special logic to make pipeline work
+
+    always@(*) begin
+        case(count_q[4:3])
+            0:index=2;
+            1:index=3;
+            2:index=0;
+            3:index=1;
+        endcase
+    end
       always @(*) begin
       case(count_q[2:0])
-      	0:p_dat2 = line_buffer2[count_q[3:2]][7:0];
-      	1:p_dat2 = line_buffer2[count_q[3:2]][15:8];
-      	2:p_dat2 = line_buffer2[count_q[3:2]][23:16];
-      	3:p_dat2 = line_buffer2[count_q[3:2]][31:24];
-      	4:p_dat2 = line_buffer2[count_q[3:2]][15:8];
-      	5:p_dat2 = line_buffer2[count_q[3:2]][23:16];
-      	6:p_dat2 = line_buffer2[count_q[3:2]][31:24];
-      	7:p_dat2 = line_buffer2[count_q[3:2]][31:24];
+      	0:p_dat2 = line_buffer2[index][7:0]; //-2 due to specific timing
+      	1:p_dat2 = line_buffer2[index][15:8];
+      	2:p_dat2 = line_buffer2[index][23:16];
+      	3:p_dat2 = line_buffer2[index][31:24];
+      	4:p_dat2 = line_buffer2[index][39:32];
+      	5:p_dat2 = line_buffer2[index][47:40];
+      	6:p_dat2 = line_buffer2[index][55:48];
+      	7:p_dat2 = line_buffer2[index][63:56];
   	  endcase
   	end
   
