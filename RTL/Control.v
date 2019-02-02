@@ -95,7 +95,8 @@ module Control (
   assign update_cur2 = (count[3:0] <2) && cur_state!=IDLE && switch;
 
   assign cache_height = cache_width;
-  
+
+  assign start=cur_state != IDLE;  
   always @(*) begin
     case(count_q[2:0])
       0:c_dat1 = Curline_buffer1[count_q[3]][7:0];

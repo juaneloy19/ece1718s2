@@ -8,6 +8,7 @@ module Me_engine (
   clk,
   reset,
   r,
+  go,
   clk_write,
   address_write_ref,
   data_write_ref,
@@ -16,11 +17,8 @@ module Me_engine (
   write_enable_ref,
   write_enable_cur,
   clk_read,
-  address_read_ref,
-  address_read_cur,
   //Outputs
-  data_read_ref,
-  data_read_cur
+  done
 
 	);
   
@@ -28,6 +26,7 @@ module Me_engine (
   input       clk;
   input       reset;
   input [3:0] r;
+  input       go;
   
   input         clk_write;
   input  [6:0]  address_write_ref;
@@ -37,11 +36,19 @@ module Me_engine (
   input         write_enable_ref;
   input         write_enable_cur;
   input         clk_read;
-  input  [6:0]  address_read_ref;
-  input  [4:0]  address_read_cur;
-  output [63:0] data_read_ref;
-  output [63:0] data_read_cur;
+  output        done;
+
+  wire [63:0] data_read_ref;
+  wire [63:0] data_read_cur;
   
+  wire  [6:0]  address_read_ref;
+  wire  [4:0]  address_read_cur;
+
+  wire [7:0]    p;
+  wire [7:0]    p_prime;
+  wire [7:0]    c;
+  wire          start;
+
   //Dave
   Mem #(.D_WIDTH(64), .A_WIDTH(7), .A_MAX(128)) refMem (
     .data(data_write_ref), 
@@ -73,13 +80,14 @@ module Me_engine (
     .r(r),
     .rdatCur(data_read_cur),
     .rdatRef(data_read_ref),
+    .go(go),
     //Outputs
-    .addrCur(),//Hook up to Mem
-    .addrRef(),//Hook up to Mem
-    .p(),
-    .p_prime(),
-    .c(),
-    .start()
+    .addrCur(address_read_cur),//Hook up to Mem
+    .addrRef(address_read_ref),//Hook up to Mem
+    .p(p),
+    .p_prime(p_prime),
+    .c(c),
+    .start(start)
   );
   //
   
@@ -87,11 +95,11 @@ module Me_engine (
    pe_row uPe_row(
     .clk(clk),
     .reset(reset),
-    .p(),
-    .p_prime(),
-    .c(),
-    .start(),
-    .done(),
+    .p(p),
+    .p_prime(p_prime),
+    .c(c),
+    .start(start),
+    .done(done),
     .mme(),
     .m_i(),
     .m_j()
