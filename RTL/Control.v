@@ -83,7 +83,7 @@ module Control (
   assign count_minus16 = count_q-16;
   assign addrCur = Caddr_cnt;
   assign addrRef = Raddr_cnt;
-  assign c = count_q[4] ? c_dat1 : c_dat2;
+  assign c = (!count_q[3] && count_q[4]) || (count_q[3] && count_q[4]) ? c_dat1 : c_dat2;
   //assign p = count_q[4] ? p_dat1 : p_dat2;
   assign p = count_q[4] ? p_dat2 : p_dat1;
   assign p_prime = count_q[4] ? p_dat1 : p_dat2;
@@ -105,10 +105,10 @@ module Control (
       1:c_dat1 = Curline_buffer1[count_q[3]][15:8];
       2:c_dat1 = Curline_buffer1[count_q[3]][23:16];
       3:c_dat1 = Curline_buffer1[count_q[3]][31:24];
-      4:c_dat1 = Curline_buffer1[count_q[3]][15:8];
-      5:c_dat1 = Curline_buffer1[count_q[3]][23:16];
-      6:c_dat1 = Curline_buffer1[count_q[3]][31:24];
-      7:c_dat1 = Curline_buffer1[count_q[3]][31:24];
+      4:c_dat1 = Curline_buffer1[count_q[3]][39:32];
+      5:c_dat1 = Curline_buffer1[count_q[3]][47:40];
+      6:c_dat1 = Curline_buffer1[count_q[3]][55:48];
+      7:c_dat1 = Curline_buffer1[count_q[3]][63:56];
   	endcase
   end
 
@@ -118,10 +118,10 @@ module Control (
       1:c_dat2 = Curline_buffer2[count_q[3]][15:8];
       2:c_dat2 = Curline_buffer2[count_q[3]][23:16];
       3:c_dat2 = Curline_buffer2[count_q[3]][31:24];
-      4:c_dat2 = Curline_buffer2[count_q[3]][15:8];
-      5:c_dat2 = Curline_buffer2[count_q[3]][23:16];
-      6:c_dat2 = Curline_buffer2[count_q[3]][31:24];
-      7:c_dat2 = Curline_buffer2[count_q[3]][31:24];
+      4:c_dat2 = Curline_buffer2[count_q[3]][39:32];
+      5:c_dat2 = Curline_buffer2[count_q[3]][48:40];
+      6:c_dat2 = Curline_buffer2[count_q[3]][55:48];
+      7:c_dat2 = Curline_buffer2[count_q[3]][63:56];
   	endcase
   end
   
