@@ -15,7 +15,6 @@ module tb();
  logic [7:0] data2_pixel [7:0];
   
  wire         clk_write;
- reg         go;
  reg         done;
  reg  [6:0]  address_write_ref;
  reg  [63:0] data_write_ref;
