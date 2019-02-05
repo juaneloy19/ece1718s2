@@ -207,6 +207,8 @@ module pe_row(
         r[`BLK_SIZE-1] <= p_prime;
       end else begin
         r[`BLK_SIZE-1] <= q[`BLK_SIZE-1];
+        // p_prime lost during this cycle
+        // buffer? or have control hold for one extra cycle?
       end
       if(pe2s)begin
         s[`BLK_SIZE-1] <= s2[`BLK_SIZE-1];
