@@ -232,6 +232,9 @@ module Control (
       cache_width_q<=4'd0;
       count_q<=7'd0;
     end
+    else if(cur_state==DONE) begin
+      count_q<=7'd0;
+    end
     else begin
       cur_state <= next_state;
       cache_width_q<=cache_width;
@@ -258,10 +261,15 @@ module Control (
       count<=8'd0;
       y_offset<=4'd1;
     end
+    else if(cur_state==DONE) begin
+      Raddr_cnt <= 8'd0;
+      Raddr_cnt_row <= 8'd0;
+      count<=8'd0;
+      y_offset<=4'd1;
+    end
     else if((cur_state==PRE_START || cur_state==START || cur_state==PROCESSING) && (update_line1||update_line2)) begin
         Raddr_cnt_row<=Raddr_cnt_row+1;
         if(Raddr_cnt_row==6'd63)begin//Done with one row 
-          //Raddr_cnt<= (cache_width_q*count[12:8]); //Will need to add offset for bigger sizes
           Raddr_cnt<= (cache_width_q*y_offset); //Will need to add offset for bigger sizes
           y_offset<=y_offset+4'd1;
         end
@@ -329,7 +337,7 @@ module Control (
             $fwrite(f, "0x%2x ", c);
         end
 
-        if(reset) 
+        if(reset || cur_state==IDLE) 
             Ccount <=0;
         else if (Ccount==15) begin
             Ccount <=0;
@@ -349,7 +357,7 @@ module Control (
             $fwrite(f2, "0x%2x ", p);
         end
 
-        if(reset) 
+        if(reset|| cur_state==IDLE) 
             Pcount <=0;
         else if (Pcount==15) begin
             Pcount <=0;
@@ -370,7 +378,7 @@ module Control (
             $fwrite(f3, "0x%2x ", p_prime);
         end
 
-        if(reset) 
+        if(reset|| cur_state==IDLE) 
             Primecount <=0;
         else if (Primecount==15) begin
             Primecount <=0;

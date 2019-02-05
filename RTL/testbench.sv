@@ -79,15 +79,17 @@ module tb();
  @(posedge clk);
   
  fork
-
     begin
         forever begin : Checker
             fd3_status = $fscanf( fd3, "%s %s %s %s", data3[0], data3[1], data3[2], data3[3], data3[4], data3[5], data3[6], MB_Y, data3[8], MB_X);
             wait(done);
                 assert(MB_Y==m_i && MB_X ==m_j) begin
-                    $display("TEST FAILED");
-                    $finish;
                 end
+                else begin
+                    $display("TEST FAILED");
+//                    $finish;
+                end
+            @(posedge clk);
         end
     end
 
@@ -150,6 +152,8 @@ module tb();
        end
         write_enable_ref<=0;
         go<=1;
+        @(posedge clk);
+        go<=0;
         @(posedge clk);
         wait(done);
         @(posedge clk);
