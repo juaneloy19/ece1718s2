@@ -304,6 +304,58 @@ module Control (
         next_state = IDLE;
     endcase
   end
-  
-  
+ 
+`ifdef DEBUG
+    integer f;
+    integer f2;
+    integer f3;
+    integer Ccount;
+    integer Pcount;
+    integer Primecount;
+    initial begin
+        f = $fopen("Current_debug.txt", "w"); 
+        f2 = $fopen("P_debug.txt", "w"); 
+        f3 = $fopen("P_prime_debug.txt", "w"); 
+    end
+//C
+    always @(posedge clk) begin
+
+        if(count_q >=16) begin
+            $fwrite(f, "0x%2x ", c);
+        end
+
+        if(reset) 
+            Ccount <=0;
+        else if (Ccount==15) begin
+            Ccount <=0;
+            $fwrite(f, "\n");
+            if(count_minus16[7:0]==255)
+                $fwrite(f, "\n");
+        end
+        else if (count_q>=16)
+            Ccount <= Ccount +1;
+        else
+            Ccount <=Ccount;
+    end//C
+//P
+    always @(posedge clk) begin
+
+        if(count >=1) begin
+            $fwrite(f2, "0x%2x ", p);
+        end
+
+        if(reset) 
+            Pcount <=0;
+        else if (Pcount==15) begin
+            Pcount <=0;
+            $fwrite(f2, "\n");
+            
+        end
+        else if (count>=1)
+            Pcount <= Pcount +1;
+        else
+            Pcount <=Pcount;
+    end //P
+            
+`endif 
 endmodule
