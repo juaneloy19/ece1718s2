@@ -111,6 +111,8 @@ module pe_row(
   reg pe2s;
   reg q2r;
   reg all_done;
+  reg started;
+  reg [7:0]c_reg;
   wire start_init;
   
   // Cycle counters
@@ -122,8 +124,12 @@ module pe_row(
       initialized <= 1'b0;
       mi <= -`BLK_SIZE/2;
       mj <= -`BLK_SIZE/2;
+      started <= 1'b0;
     end else begin
       if(start) begin
+        started <= 1'b1;
+      end
+      if(start||started) begin
         if(in_cycle<`BLK_SIZE-1) begin
           in_cycle <= in_cycle+1;
           q2r <= 1'b0;
@@ -159,7 +165,7 @@ module pe_row(
           q[i] <= 8'b0;
           r[i] <= 8'b0;
           s[i] <= 8'b0;
-        end else begin
+        end else if(start||started) begin
           q[i] <= q[i+1];
           // Parallel shifting Q registers into R registers every `BLK_SIZE -1 cycles
           if(!q2r)begin
@@ -178,7 +184,7 @@ module pe_row(
         end
       end
       pe pe_i(
-        .a(c),
+        .a(c_reg),
         .b(r[i]),
         .clk(clk),
         .reset(reset),
@@ -194,7 +200,8 @@ module pe_row(
       q[`BLK_SIZE-1] <= 8'b0;
       r[`BLK_SIZE-1] <= 8'b0;
       s[`BLK_SIZE-1] <= 8'b0;
-    end else begin
+      c_reg <= 8'b0;
+    end else if(start||started) begin
       q[`BLK_SIZE-1] <= p;
       if(!q2r)begin
         r[`BLK_SIZE-1] <= p_prime;
@@ -206,10 +213,13 @@ module pe_row(
         s_mi[`BLK_SIZE-1] <= mi;
         s_mj[`BLK_SIZE-1] <= `BLK_SIZE/2 -1;
       end
+      if(start_init)begin
+        c_reg <= c;
+      end
     end
   end
     pe pe_last(
-      .a(c),
+      .a(c_reg),
       .b(r[`BLK_SIZE-1]),
       .clk(clk),
       .reset(reset),
@@ -223,7 +233,8 @@ module pe_row(
     if(reset)begin
       cmp <= 8'h0;
     end else begin
-      if(cmp<s[0])begin
+      // Comparing for minimum value
+      if(cmp>s[0])begin
         cmp <= s[0]; // add valid signal to s to reduce energy
         cmp_mi <= s_mi[0];
         cmp_mj <= s_mj[0];
@@ -231,7 +242,7 @@ module pe_row(
     end
   end
   
-  assign start_init = start && initialized;
+  assign start_init = started && initialized;
   assign m_i = cmp_mi;
   assign m_j = cmp_mj;
   assign done = all_done;
