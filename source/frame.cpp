@@ -623,6 +623,39 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 		for (int j = 0; j < cache_width ; j += block_size) {
 			for (int z = 0; z < 16; z++)//Make it config
 				if (j + z + block_size <= cache_width) {
+#ifdef JUAN_DEBUG
+					for (int height=0; height < 16; height++) {
+						for (int width=0; width < 16; width++) {
+							p_C_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[height][width]) << " ";
+						}
+						p_C_cmodel << "\n";
+					}
+					p_C_cmodel << "\n";
+
+					if (z == 0) {
+						for (int height = 0; height < 16; height++) {
+							for (int width = 0; width < 16; width++) {
+								p_P_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i+ height][j+ width]) << " ";
+							}
+							p_P_cmodel << "\n";
+						}
+						p_P_cmodel << "\n";
+
+						for (int height = 0; height < 16; height++) {
+							for (int width = 0; width < 16; width++) {
+								if(j + width + 16 < cache_width)
+									p_P_prime_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i + height][j + width +16]) << " ";
+								else
+									p_P_prime_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(255) << " ";
+
+							}
+							p_P_prime_cmodel << "\n";
+						}
+						p_P_prime_cmodel << "\n";
+
+					}
+
+#endif
 					MV = search_vectors.pop();
 					PE[z] = PFrame::ME(ME_Cur_Block, ME_cache, block_size, j + z, i);
 					BestMV = (PE[z] < BestCost) ? MV : BestMV;
