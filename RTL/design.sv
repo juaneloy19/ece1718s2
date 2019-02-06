@@ -106,8 +106,8 @@ module Me_engine (
     .start(start),
     .done(done),
     .mme(),
-    .m_i(),
-    .m_j()
+    .m_i(m_i),
+    .m_j(m_j)
    );
   
   //

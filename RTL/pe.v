@@ -135,6 +135,7 @@ module pe_row(
       q2r <= 1'b0;
       pe2s <= 1'b0;
       start_out <= 1'b0;
+      all_done <= 1'b0;
       //mme <= 1'b0;
       //m_i <= 1'b0;
       //m_j <= 1'b0;
@@ -170,6 +171,7 @@ module pe_row(
         end
         if(done_cycle<`BS_CUBE-1)begin
           done_cycle <= done_cycle+1;       
+          all_done <= 1'b0;
         end else begin
           done_cycle <= 12'h0;
           all_done <= 1'b1;
