@@ -108,9 +108,10 @@ module pe_row(
   // Comparator
   reg [15:0] cmp;
   reg [7:0] mi;
-  reg [7:0] mj;
   reg [7:0] cmp_mi;
   reg [7:0] cmp_mj;
+  reg comparing;
+  reg comparing_done;
   reg [1:0] pipe_cycle_delay;
   reg start_out;
   // Initialized, used to determine if initialization is complete
@@ -118,6 +119,7 @@ module pe_row(
   reg pe2s;
   reg q2r;
   reg all_done;
+  reg almost_done;
   reg started;
   wire start_init;
   
@@ -129,13 +131,13 @@ module pe_row(
       done_cycle <= 12'h0;
       initialized <= 1'b0;
       pipe_cycle_delay <= 2'h0;
-      mi <= 8'hff;
-      mj <= 8'h0;
+      mi <= 8'h0;
       started <= 1'b0;
       q2r <= 1'b0;
       pe2s <= 1'b0;
       start_out <= 1'b0;
       all_done <= 1'b0;
+      almost_done <= 1'b0;
       //mme <= 1'b0;
       //m_i <= 1'b0;
       //m_j <= 1'b0;
@@ -167,16 +169,36 @@ module pe_row(
         end else begin
           out_cycle <= 8'h0;
           pe2s <= 1'b1;
-          mi <= mi + 1;
         end
         if(done_cycle<`BS_CUBE-1)begin
           done_cycle <= done_cycle+1;       
-          all_done <= 1'b0;
         end else begin
           done_cycle <= 12'h0;
-          all_done <= 1'b1;
-          mi <= 8'hff;
-          mj <= 8'h0;
+          almost_done <= 1'b1;
+        end
+        if(comparing_done)begin
+          if(mi<`BLK_SIZE-1)begin
+            mi <= mi + 1;
+          end else begin
+            mi <= 8'h0;
+          end
+          all_done <= almost_done;
+          almost_done <= 1'b0;
+        end else begin
+          all_done <= 1'b0;
+        end
+        if(almost_done) begin
+          in_cycle <= 8'h0;
+          out_cycle <= 8'h0;
+          done_cycle <= 12'h0;
+          initialized <= 1'b0;
+          pipe_cycle_delay <= 2'h0;
+          q2r <= 1'b0;
+          pe2s <= 1'b0;
+        end
+        if(all_done)begin
+          started <= 1'b0;
+          start_out <= 1'b0;
         end
       end
     end
@@ -218,7 +240,7 @@ module pe_row(
           end else begin
             s[i]    <= s2[i];
             s_mi[i] <= mi;
-            s_mj[i] <= mj+i;
+            s_mj[i] <= i;
             s_valid[i] <= 1'b1;
           end
         end
@@ -289,13 +311,25 @@ module pe_row(
       cmp <= 15'h7fff;
       cmp_mi <= 8'h0;
       cmp_mj <= 8'h0;
+      comparing <= 1'b0;
+      comparing_done <= 1'b0;
     end else begin
       // Comparing for minimum value
-      if(s_valid[0]&& (cmp>s[0]))begin
-        cmp <= s[0]; // add valid signal to s to reduce energy
-        cmp_mi <= s_mi[0];
-        cmp_mj <= s_mj[0];
-      end      
+      if(s_valid[0])begin
+        if(cmp>s[0])begin
+          cmp <= s[0]; // add valid signal to s to reduce energy
+          cmp_mi <= s_mi[0];
+          cmp_mj <= s_mj[0];
+        end
+        comparing <= 1'b1;
+      end else begin
+        if(comparing)begin
+          comparing <= 1'b0;
+          comparing_done <= 1'b1;
+        end else begin
+          comparing_done <=1'b0;
+        end
+      end
     end
   end
   
