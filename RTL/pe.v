@@ -99,8 +99,6 @@ module pe_row(
   reg [7:0] s_mi [`BLK_SIZE-1:0];
   reg [7:0] s_mj [`BLK_SIZE-1:0];  
   reg [15:0] s2 [`BLK_SIZE-1:0]; // Make wire?
-  reg [7:0] s2_mi [`BLK_SIZE-1:0]; // Make wire?
-  reg [7:0] s2_mj [`BLK_SIZE-1:0]; // Make wire?
   reg q_done [`BLK_SIZE-1:0];
   reg [7:0] in_cycle;
   reg [7:0] out_cycle;
@@ -249,7 +247,7 @@ module pe_row(
         .a(c),
         .b(r[i]),
         .clk(clk),
-        .reset(reset),
+        .reset(reset||all_done),
         .reset_accum(pe2s),
         .start(start_init),
         .me(s2[i]),
@@ -287,7 +285,7 @@ module pe_row(
       if(pe2s)begin
         s[`BLK_SIZE-1] <= s2[`BLK_SIZE-1];
         s_mi[`BLK_SIZE-1] <= mi;
-        s_mj[`BLK_SIZE-1] <= `BLK_SIZE/2 -1;
+        s_mj[`BLK_SIZE-1] <= `BLK_SIZE -1;
         s_valid[`BLK_SIZE-1] <= 1'b1;
       end else begin
         s_valid[`BLK_SIZE-1] <= 1'b0;
@@ -298,7 +296,7 @@ module pe_row(
       .a(c),
       .b(r[`BLK_SIZE-1]),
       .clk(clk),
-      .reset(reset),
+      .reset(reset||all_done),
       .reset_accum(pe2s),
       .start(start_init),
       .me(s2[`BLK_SIZE-1]),
