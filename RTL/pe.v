@@ -4,6 +4,7 @@
 module pe(
  clk,
  reset,
+ reset_accum,
  a,
  b,
  start,
@@ -15,6 +16,7 @@ module pe(
   input [7:0] b;
   input clk;
   input reset;
+  input reset_accum;
   input start;
   output [15:0] me;
   output done;  
@@ -45,7 +47,9 @@ module pe(
           q2 <= q1[8:0];
         end
       end
-      if(q_done_2) begin
+      if(reset_accum) begin
+        accumulator <= q2;
+      end else if(q_done_2) begin
         // Accumulator
         accumulator <= accumulator + q2;
       end
@@ -125,8 +129,8 @@ module pe_row(
       done_cycle <= 12'h0;
       initialized <= 1'b0;
       pipe_cycle_delay <= 2'h0;
-      mi <= 7'h0;
-      mj <= 7'h0;
+      mi <= 8'hff;
+      mj <= 8'h0;
       started <= 1'b0;
       q2r <= 1'b0;
       pe2s <= 1'b0;
@@ -169,6 +173,8 @@ module pe_row(
         end else begin
           done_cycle <= 12'h0;
           all_done <= 1'b1;
+          mi <= 8'hff;
+          mj <= 8'h0;
         end
       end
     end
@@ -220,6 +226,7 @@ module pe_row(
         .b(r[i]),
         .clk(clk),
         .reset(reset),
+        .reset_accum(pe2s),
         .start(start_init),
         .me(s2[i]),
         .done(q_done[i])
@@ -268,6 +275,7 @@ module pe_row(
       .b(r[`BLK_SIZE-1]),
       .clk(clk),
       .reset(reset),
+      .reset_accum(pe2s),
       .start(start_init),
       .me(s2[`BLK_SIZE-1]),
       .done(q_done[`BLK_SIZE-1])
