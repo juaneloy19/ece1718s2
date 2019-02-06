@@ -319,7 +319,7 @@ module Control (
     endcase
   end
  
-`ifdef DEBUG
+//`ifdef DEBUG
     integer f;
     integer f2;
     integer f3;
@@ -395,5 +395,5 @@ module Control (
 
 
             
-`endif 
+//`endif 
 endmodule

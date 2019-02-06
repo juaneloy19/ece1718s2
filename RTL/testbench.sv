@@ -84,6 +84,7 @@ module tb();
  fork
     begin
         forever begin : Checker
+            wait(!reset);
             fd3_status = $fscanf( fd3, "%s %s %s %s %s %s %s %d %s %d", data3[0], data3[1], data3[2], data3[3], data3[4], data3[5], data3[6], MB_Y, data3[8], MB_X);
             @(posedge clk);
             wait(done);
@@ -102,8 +103,8 @@ module tb();
 
     begin 
         forever begin : read_current_loop
+        wait(!reset);
         fd1_status = $fscanf( fd, "%s %s %s %s", data1[0], data1[1], data1[2], data1[3]);
-
         rowC_count=0;
         colC_count=0;
         if ( fd1_status == EOF  ) begin
@@ -139,6 +140,7 @@ module tb();
 
     begin 
         forever begin : read_reference_loop
+        wait(!reset);
         fd2_status = $fscanf( fd2, "%s %s %s %s", data2[0], data2[1], data2[2], data2[3]);
         row_count=0;
         col_count=0;
@@ -171,6 +173,11 @@ module tb();
         @(posedge clk);
         $display("DONE Loading Reference");
         wait(done);
+        reset <=1'b1;
+        @(posedge clk);
+        @(posedge clk);
+        @(posedge clk);
+        reset<=1'b0;
         @(posedge clk);
      end//For loop
     end //Fork

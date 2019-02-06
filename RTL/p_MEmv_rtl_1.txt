@@ -1,2 +1,16 @@
 MB_Y: 0 MB_X: 0 Cost: 1420 MV_Y: 0 MV_X: 0
-MB_Y: 0 MB_X: 1 Cost: 1115 MV_Y: 0 MV_X: 0
+MB_Y: 0 MB_X: 1 Cost: 1115 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 2 Cost: 1327 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 3 Cost: 965 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 4 Cost: 985 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 5 Cost: 1000 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 6 Cost: 667 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 7 Cost: 913 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 8 Cost: 1064 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 9 Cost: 1069 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 10 Cost: 967 MV_Y: 0 MV_X: 7
+MB_Y: 0 MB_X: 11 Cost: 870 MV_Y: 1 MV_X: 6
+MB_Y: 0 MB_X: 12 Cost: 1600 MV_Y: 1 MV_X: 7
+MB_Y: 0 MB_X: 13 Cost: 1128 MV_Y: 0 MV_X: 6
+MB_Y: 0 MB_X: 14 Cost: 764 MV_Y: 0 MV_X: 6
+MB_Y: 0 MB_X: 15 Cost: 760 MV_Y: 0 MV_X: 6
