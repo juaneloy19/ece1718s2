@@ -234,6 +234,7 @@ module Control (
     end
     else if(cur_state==DONE) begin
       count_q<=7'd0;
+      cur_state <= next_state;
     end
     else begin
       cur_state <= next_state;
