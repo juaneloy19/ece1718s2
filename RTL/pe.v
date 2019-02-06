@@ -4,6 +4,7 @@
 module pe(
  clk,
  reset,
+ reset_accum,
  a,
  b,
  start,
@@ -15,18 +16,19 @@ module pe(
   input [7:0] b;
   input clk;
   input reset;
+  input reset_accum;
   input start;
   output [15:0] me;
   output done;  
   
-  reg [7:0] q1;
+  reg [8:0] q1;
   reg [7:0] q2;
   reg [15:0] accumulator;
   reg q_done_1,q_done_2,q_done_3;
   
   always @(posedge clk) begin
     if(reset) begin
-      q1 <= 8'b0;
+      q1 <= 9'b0;
       q2 <= 8'b0;
       accumulator <= 16'b0;
       q_done_1 <= 1'b0;
@@ -39,13 +41,15 @@ module pe(
       end
       if(q_done_1) begin
         // Absolute value
-        if(q1[7]) begin
-          q2 <= ~(q1-8'h1);
+        if(q1[8]) begin
+          q2 <= ~(q1-9'h1);
         end else begin
-          q2 <= q1[7:0];
+          q2 <= q1[8:0];
         end
       end
-      if(q_done_2) begin
+      if(reset_accum) begin
+        accumulator <= q2;
+      end else if(q_done_2) begin
         // Accumulator
         accumulator <= accumulator + q2;
       end
@@ -107,6 +111,8 @@ module pe_row(
   reg [7:0] mj;
   reg [7:0] cmp_mi;
   reg [7:0] cmp_mj;
+  reg [1:0] pipe_cycle_delay;
+  reg start_out;
   // Initialized, used to determine if initialization is complete
   reg initialized;
   reg pe2s;
@@ -122,11 +128,13 @@ module pe_row(
       out_cycle <= 8'h0;
       done_cycle <= 12'h0;
       initialized <= 1'b0;
-      mi <= -`BLK_SIZE/2;
-      mj <= -`BLK_SIZE/2;
+      pipe_cycle_delay <= 2'h0;
+      mi <= 8'hff;
+      mj <= 8'h0;
       started <= 1'b0;
       q2r <= 1'b0;
       pe2s <= 1'b0;
+      start_out <= 1'b0;
       //mme <= 1'b0;
       //m_i <= 1'b0;
       //m_j <= 1'b0;
@@ -146,6 +154,12 @@ module pe_row(
           initialized <= 1'b1;
           q2r <= 1'b0;
         end
+      end
+      if(initialized && !start_out) begin
+        pipe_cycle_delay <= pipe_cycle_delay + 1;
+        start_out <= pipe_cycle_delay[0];
+      end
+      if(start_out) begin
         if(out_cycle<`BS_SQ-1)begin
           out_cycle <= out_cycle+1;
           pe2s <= 1'b0;
@@ -159,6 +173,8 @@ module pe_row(
         end else begin
           done_cycle <= 12'h0;
           all_done <= 1'b1;
+          mi <= 8'hff;
+          mj <= 8'h0;
         end
       end
     end
@@ -210,6 +226,7 @@ module pe_row(
         .b(r[i]),
         .clk(clk),
         .reset(reset),
+        .reset_accum(pe2s),
         .start(start_init),
         .me(s2[i]),
         .done(q_done[i])
@@ -258,9 +275,10 @@ module pe_row(
       .b(r[`BLK_SIZE-1]),
       .clk(clk),
       .reset(reset),
+      .reset_accum(pe2s),
       .start(start_init),
       .me(s2[`BLK_SIZE-1]),
-      .done(q_done[`BLK_SIZE])
+      .done(q_done[`BLK_SIZE-1])
     );
     
   //Comparator
