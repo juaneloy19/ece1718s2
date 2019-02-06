@@ -530,6 +530,8 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 	int BestCost = 99999999;
 	std::pair<int, int> BestMV;
 	std::pair<int, int> MV;
+	int best_i = 0;
+	int best_j = 0;
 	ByteMatrix ME_cache(0, cache_height, cache_width);
 	ByteMatrix ME_Cur_Block(0, block_size, block_size);
 #ifdef DUMP_STIM
@@ -656,6 +658,7 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 			for (int z = 0; z < 16; z++)//Make it config
 				if (j + z + block_size <= cache_width) {
 #ifdef JUAN_DEBUG
+					if (z == 0) {
 					for (int height=0; height < 16; height++) {
 						for (int width=0; width < 16; width++) {
 							p_C_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[height][width]) << " ";
@@ -664,7 +667,6 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 					}
 					p_C_cmodel << "\n";
 
-					if (z == 0) {
 						for (int height = 0; height < 16; height++) {
 							for (int width = 0; width < 16; width++) {
 								p_P_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i+ height][j+ width]) << " ";
@@ -694,6 +696,9 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 					p_PeCost << "PE#" << z << " Cost=" << int(PE[z]) << " ";
 #endif
 					BestMV = (PE[z] < BestCost) ? MV : BestMV;
+					best_i = (PE[z] < BestCost) ?  i : best_i;
+					best_j = (PE[z] < BestCost) ?  z + j : best_j;
+
 					BestCost = (PE[z] < BestCost) ? PE[z] : BestCost;
 				}
 		}
@@ -705,7 +710,9 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 	p_PeCost << "\n";
 #endif				 
 #ifdef DUMP_STIM
-	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first - a << " MV_X: "<< BestMV.second - b  << "\n";
+	//p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first - a << " MV_X: "<< BestMV.second - b  << "\n";
+	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size << " Cost: " << BestCost << " MV_Y: " << best_i  << " MV_X: " << best_j << "\n";
+
 #endif
 
 	return  BestMV;
