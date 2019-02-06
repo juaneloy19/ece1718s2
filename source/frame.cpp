@@ -514,8 +514,13 @@ int PFrame::ME(ByteMatrix a, ByteMatrix b, int block_size, int offset_x, int off
 			latch1 = a[i][j] - b[i+offset_y][j + offset_x];
 			latch2 = abs(latch1);
 			latch3 = latch3 + latch2;
+#ifdef JUAN_DEBUG
+			p_Acumm << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(latch3) << " ";
+#endif
 		}
 	}
+	p_Acumm << "\n";
+
 	PE = latch3;
 	return PE;
 }
