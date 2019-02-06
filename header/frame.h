@@ -16,6 +16,13 @@ extern std::ofstream p_MEcur_block_rtl;
 extern std::ofstream p_MEcache_rtl;
 extern std::ofstream p_MEmv_rtl;
 
+extern std::ofstream p_C_cmodel;
+extern std::ofstream p_P_cmodel;
+extern std::ofstream p_P_prime_cmodel;
+
+extern std::ofstream p_PeCost;
+
+
 
 
 /* Forward declaration of PFrame and an identifier to use in the bytestreams */

@@ -153,9 +153,21 @@ int main(int argc, char* argv[])
 		std::string filename = "p_mb_info_" + std::to_string(iframe) + ".txt";
 		std::string filename2 = "p_cache_rtl" + std::to_string(iframe) + ".txt";
 		std::string filename3 = "p_cache_cmodel" + std::to_string(iframe) + ".txt";
+		std::string filename7 = "p_C_cmodel" + std::to_string(iframe) + ".txt";
+		std::string filename8 = "p_P_cmodel" + std::to_string(iframe) + ".txt";
+		std::string filename9 = "p_P_prime_cmodel" + std::to_string(iframe) + ".txt";
+		std::string filename10 = "p_Individual_PE_cost_" + std::to_string(iframe) + ".txt";
+
+
 		p_mb_info.open(filename);
 		p_cache_rtl.open(filename2);
 		p_cache_cmodel.open(filename3);
+		p_C_cmodel.open(filename7);
+		p_P_cmodel.open(filename8);
+		p_P_prime_cmodel.open(filename9);
+		p_PeCost.open(filename10);
+
+
 #endif
 #ifdef DUMP_STIM
 		std::string filename4 = "p_MEcur_block_rtl_" + std::to_string(iframe) + ".txt";
@@ -254,6 +266,11 @@ int main(int argc, char* argv[])
 		p_mb_info.close();
 		p_cache_rtl.close();
 		p_cache_cmodel.close();
+		p_C_cmodel.close();
+		p_P_cmodel.close();
+		p_P_prime_cmodel.close();
+		p_PeCost.close();
+
 #endif
 
 #ifdef DUMP_STIM

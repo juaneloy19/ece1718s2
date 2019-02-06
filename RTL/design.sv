@@ -18,6 +18,8 @@ module Me_engine (
   write_enable_cur,
   clk_read,
   //Outputs
+  m_i,
+  m_j,
   done
 
 	);
@@ -37,6 +39,8 @@ module Me_engine (
   input         write_enable_cur;
   input         clk_read;
   output        done;
+  output [7:0] m_i;
+  output [7:0] m_j;
 
   wire [63:0] data_read_ref;
   wire [63:0] data_read_cur;

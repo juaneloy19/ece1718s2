@@ -565,6 +565,32 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 	//LOAD CACHE
 	for (int i = 0; i < cache_height; i++) {
 		for (int j = 0; j < cache_width; j = j + 8) {
+			ME_cache.m_matrix[i][j] = Host_cache.m_matrix[i][j];
+			ME_cache.m_matrix[i][j + 1] = Host_cache.m_matrix[i][j + 1];
+			ME_cache.m_matrix[i][j + 2] = Host_cache.m_matrix[i][j + 2];
+			ME_cache.m_matrix[i][j + 3] = Host_cache.m_matrix[i][j + 3];
+			ME_cache.m_matrix[i][j + 4] = Host_cache.m_matrix[i][j + 4];
+			ME_cache.m_matrix[i][j + 5] = Host_cache.m_matrix[i][j + 5];
+			ME_cache.m_matrix[i][j + 6] = Host_cache.m_matrix[i][j + 6];
+			if (j + 7< cache_width)//Corner case cache width is -1
+				ME_cache.m_matrix[i][j + 7] = Host_cache.m_matrix[i][j + 7];
+
+			#ifdef DUMP_STIM
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 0]) << " ";
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 1]) << " ";
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 2]) << " ";
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 3]) << " ";
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 4]) << " ";
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 5]) << " ";
+			p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 6]) << " ";
+			if(j+7< cache_width)
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 7]) << " ";
+			else
+				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(255) << " ";
+
+			#endif
+
+			/*Simplified code above since we are assuming cache width is aligned to 8
 			if (j < cache_width) {
 				ME_cache.m_matrix[i][j] = Host_cache.m_matrix[i][j];
 #ifdef DUMP_STIM
@@ -612,26 +638,69 @@ std::pair<int, int> StartME(ByteMatrix Host_cache, ByteMatrix cur_block, SearchQ
 #ifdef DUMP_STIM
 				p_MEcache_rtl << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i][j + 7]) << " ";
 #endif
-			}
+			}*/
 		}
 		p_MEcache_rtl << "\n";
 	}
 	p_MEcache_rtl << "\n";
 
 	//START PREDICTION
+	p_PeCost << "MB_Y: " << a / block_size << " MB_X: " << b / block_size << "\n";
 	for (int i = 0; i <= cache_height - block_size; i++) {
 		for (int j = 0; j < cache_width ; j += block_size) {
 			for (int z = 0; z < 16; z++)//Make it config
 				if (j + z + block_size <= cache_width) {
+#ifdef JUAN_DEBUG
+					for (int height=0; height < 16; height++) {
+						for (int width=0; width < 16; width++) {
+							p_C_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_Cur_Block.m_matrix[height][width]) << " ";
+						}
+						p_C_cmodel << "\n";
+					}
+					p_C_cmodel << "\n";
+
+					if (z == 0) {
+						for (int height = 0; height < 16; height++) {
+							for (int width = 0; width < 16; width++) {
+								p_P_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i+ height][j+ width]) << " ";
+							}
+							p_P_cmodel << "\n";
+						}
+						p_P_cmodel << "\n";
+
+						for (int height = 0; height < 16; height++) {
+							for (int width = 0; width < 16; width++) {
+								if(j + width + 16 < cache_width)
+									p_P_prime_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(ME_cache.m_matrix[i + height][j + width +16]) << " ";
+								else
+									p_P_prime_cmodel << "0x" << std::setfill('0') << std::setw(2) << std::hex << int(255) << " ";
+
+							}
+							p_P_prime_cmodel << "\n";
+						}
+						p_P_prime_cmodel << "\n";
+
+					}
+
+#endif
 					MV = search_vectors.pop();
 					PE[z] = PFrame::ME(ME_Cur_Block, ME_cache, block_size, j + z, i);
+#ifdef JUAN_DEBUG
+					p_PeCost << "PE#" << z << " Cost=" << int(PE[z]) << " ";
+#endif
 					BestMV = (PE[z] < BestCost) ? MV : BestMV;
 					BestCost = (PE[z] < BestCost) ? PE[z] : BestCost;
 				}
 		}
+#ifdef JUAN_DEBUG
+		p_PeCost << "\n";
+#endif 
 	}
+#ifdef JUAN_DEBUG
+	p_PeCost << "\n";
+#endif				 
 #ifdef DUMP_STIM
-	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first << " MV_X: "<< BestMV.second  << "\n";
+	p_MEmv_rtl << "MB_Y: " << a / block_size << " MB_X: " << b / block_size <<  " Cost: " << BestCost << " MV_Y: " << BestMV.first - a << " MV_X: "<< BestMV.second - b  << "\n";
 #endif
 
 	return  BestMV;

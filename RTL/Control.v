@@ -47,6 +47,7 @@ module Control (
   reg [max_cache_width-1:0]	cache_width_q;
   reg [max_cache_width-1:0]	cache_width;//devided by 8
   reg [max_cache_width-1:0]	stride;
+  reg [3:0] y_offset;
   
   reg [cur_addr_max-1:0] Caddr_cnt;
   reg [max_cache_width-1:0] Raddr_cnt;
@@ -231,6 +232,9 @@ module Control (
       cache_width_q<=4'd0;
       count_q<=7'd0;
     end
+    else if(cur_state==DONE) begin
+      count_q<=7'd0;
+    end
     else begin
       cur_state <= next_state;
       cache_width_q<=cache_width;
@@ -255,12 +259,20 @@ module Control (
       Raddr_cnt <= 8'd0;
       Raddr_cnt_row <= 8'd0;
       count<=8'd0;
+      y_offset<=4'd1;
+    end
+    else if(cur_state==DONE) begin
+      Raddr_cnt <= 8'd0;
+      Raddr_cnt_row <= 8'd0;
+      count<=8'd0;
+      y_offset<=4'd1;
     end
     else if((cur_state==PRE_START || cur_state==START || cur_state==PROCESSING) && (update_line1||update_line2)) begin
-        //if(Raddr_cnt[5:0]==6'd63)//Done with one row 
         Raddr_cnt_row<=Raddr_cnt_row+1;
-        if(Raddr_cnt_row==6'd63)//Done with one row 
-          Raddr_cnt<= (cache_width_q*count[12:8]); //Will need to add offset for bigger sizes
+        if(Raddr_cnt_row==6'd63)begin//Done with one row 
+          Raddr_cnt<= (cache_width_q*y_offset); //Will need to add offset for bigger sizes
+          y_offset<=y_offset+4'd1;
+        end
         else if(Raddr_cnt[2:0]==7)
           Raddr_cnt <= Raddr_cnt + stride + 8'd1;
         else
@@ -268,6 +280,7 @@ module Control (
     end
     else begin
       Raddr_cnt<=Raddr_cnt; //Will need to add offset for bigger sizes
+      y_offset<=y_offset;
     end
       
     if(cur_state==PRE_START || cur_state==START || cur_state==PROCESSING || cur_state==PRE_DONE)
@@ -304,6 +317,82 @@ module Control (
         next_state = IDLE;
     endcase
   end
-  
-  
+ 
+`ifdef DEBUG
+    integer f;
+    integer f2;
+    integer f3;
+    integer Ccount;
+    integer Pcount;
+    integer Primecount;
+    initial begin
+        f = $fopen("Current_debug.txt", "w"); 
+        f2 = $fopen("P_debug.txt", "w"); 
+        f3 = $fopen("P_prime_debug.txt", "w"); 
+    end
+//C
+    always @(posedge clk) begin
+
+        if(count_q >=16) begin
+            $fwrite(f, "0x%2x ", c);
+        end
+
+        if(reset || cur_state==IDLE) 
+            Ccount <=0;
+        else if (Ccount==15) begin
+            Ccount <=0;
+            $fwrite(f, "\n");
+            if(count_minus16[7:0]==255)
+                $fwrite(f, "\n");
+        end
+        else if (count_q>=16)
+            Ccount <= Ccount +1;
+        else
+            Ccount <=Ccount;
+    end//C
+//P
+    always @(posedge clk) begin
+
+        if(count >=1) begin
+            $fwrite(f2, "0x%2x ", p);
+        end
+
+        if(reset|| cur_state==IDLE) 
+            Pcount <=0;
+        else if (Pcount==15) begin
+            Pcount <=0;
+            $fwrite(f2, "\n");
+            if(count_q[7:0] ==255)
+                $fwrite(f2, "\n");
+        end
+        else if (count>=1)
+            Pcount <= Pcount +1;
+        else
+            Pcount <=Pcount;
+    end //P
+
+//P_prime
+    always @(posedge clk) begin
+
+        if(count_q >=16) begin
+            $fwrite(f3, "0x%2x ", p_prime);
+        end
+
+        if(reset|| cur_state==IDLE) 
+            Primecount <=0;
+        else if (Primecount==15) begin
+            Primecount <=0;
+            $fwrite(f3, "\n");
+            if(count_minus16[7:0]==255)
+                $fwrite(f3, "\n");
+        end
+        else if (count_q>=16)
+            Primecount <= Primecount +1;
+        else
+            Primecount <=Primecount;
+    end//C
+
+
+            
+`endif 
 endmodule

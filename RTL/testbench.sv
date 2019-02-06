@@ -7,10 +7,11 @@ module tb();
  reg Clock;
  reg [1:0] r;
  reg go;
- integer fd,fd1_status, fd2, fd2_status, MBX, MBY;
+ integer fd,fd1_status, fd2, fd2_status, fd3, fd3_status, MB_X, MB_Y;
  integer count1, count2, row_count, col_count, rowC_count, colC_count;
  string data1[3:0];
  string data2[3:0];
+ string data3[9:0];
  logic [7:0] data1_pixel [7:0];
  logic [7:0] data2_pixel [7:0];
   
@@ -23,6 +24,9 @@ module tb();
  reg         write_enable_ref;
  reg         write_enable_cur;
  wire         clk_read;
+
+ wire [7:0] m_i;
+ wire [7:0] m_j;
 
 
  Me_engine DUT (
@@ -38,6 +42,8 @@ module tb();
  .write_enable_ref(write_enable_ref),
  .write_enable_cur(write_enable_cur),
  .clk_read(clk_read),
+ .m_i(m_i),
+ .m_j(m_j),
  .done(done) 
  );
 
@@ -57,6 +63,7 @@ module tb();
  $fsdbDumpvars();
  fd = $fopen("p_MEcur_block_rtl_1.txt", "r");
  fd2 = $fopen("p_MEcache_rtl_rtl_1.txt", "r");
+ fd3 = $fopen("p_MEmv_rtl_1.txt", "r");
  go=0;
  clk = 0;
  reset = 1; // load first operand
@@ -72,10 +79,25 @@ module tb();
  @(posedge clk);
   
  fork
+    begin
+        forever begin : Checker
+            fd3_status = $fscanf( fd3, "%s %s %s %s", data3[0], data3[1], data3[2], data3[3], data3[4], data3[5], data3[6], MB_Y, data3[8], MB_X);
+            wait(done);
+                assert(MB_Y==m_i && MB_X ==m_j) begin
+                end
+                else begin
+                    $display("TEST FAILED");
+//                    $finish;
+                end
+            @(posedge clk);
+        end
+    end
+
 
     begin 
         forever begin : read_current_loop
         fd1_status = $fscanf( fd, "%s %s %s %s", data1[0], data1[1], data1[2], data1[3]);
+
         rowC_count=0;
         colC_count=0;
         if ( fd1_status == EOF  ) begin
@@ -131,12 +153,15 @@ module tb();
         write_enable_ref<=0;
         go<=1;
         @(posedge clk);
+        go<=0;
+        @(posedge clk);
         wait(done);
         @(posedge clk);
      end//For loop
     end //Fork
     join
  end//Initial
+
  
 endmodule
 
