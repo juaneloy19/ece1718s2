@@ -12,6 +12,8 @@ std::ofstream p_P_prime_cmodel;
 
 std::ofstream p_PeCost;
 
+std::ofstream p_Acumm;
+
 
 
 

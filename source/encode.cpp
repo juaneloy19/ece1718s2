@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 		std::string filename8 = "p_P_cmodel" + std::to_string(iframe) + ".txt";
 		std::string filename9 = "p_P_prime_cmodel" + std::to_string(iframe) + ".txt";
 		std::string filename10 = "p_Individual_PE_cost_" + std::to_string(iframe) + ".txt";
-
+		std::string filename11 = "p_Acumm" + std::to_string(iframe) + ".txt";
 
 		p_mb_info.open(filename);
 		p_cache_rtl.open(filename2);
@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
 		p_P_cmodel.open(filename8);
 		p_P_prime_cmodel.open(filename9);
 		p_PeCost.open(filename10);
+		p_Acumm.open(filename11);
 
 
 #endif
@@ -270,6 +271,7 @@ int main(int argc, char* argv[])
 		p_P_cmodel.close();
 		p_P_prime_cmodel.close();
 		p_PeCost.close();
+		p_Acumm.close();
 
 #endif
 
