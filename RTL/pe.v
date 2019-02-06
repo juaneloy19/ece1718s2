@@ -16,19 +16,19 @@ module pe(
   input clk;
   input reset;
   input start;
-  output [7:0] me;
+  output [15:0] me;
   output done;  
   
   reg [7:0] q1;
   reg [7:0] q2;
-  reg [7:0] accumulator;
+  reg [15:0] accumulator;
   reg q_done_1,q_done_2,q_done_3;
   
   always @(posedge clk) begin
     if(reset) begin
       q1 <= 8'b0;
       q2 <= 8'b0;
-      accumulator <= 8'b0;
+      accumulator <= 16'b0;
       q_done_1 <= 1'b0;
       q_done_2 <= 1'b0;
       q_done_3 <= 1'b0;
@@ -90,10 +90,11 @@ module pe_row(
   // 8 bit registers for p'
   reg [7:0] r [`BLK_SIZE-1:0];
   // Shift register for ME outputs
-  reg [7:0] s [`BLK_SIZE-1:0];
+  reg [15:0] s [`BLK_SIZE-1:0];
+  reg s_valid [`BLK_SIZE-1:0];
   reg [7:0] s_mi [`BLK_SIZE-1:0];
   reg [7:0] s_mj [`BLK_SIZE-1:0];  
-  reg [7:0] s2 [`BLK_SIZE-1:0]; // Make wire?
+  reg [15:0] s2 [`BLK_SIZE-1:0]; // Make wire?
   reg [7:0] s2_mi [`BLK_SIZE-1:0]; // Make wire?
   reg [7:0] s2_mj [`BLK_SIZE-1:0]; // Make wire?
   reg q_done [`BLK_SIZE-1:0];
@@ -101,7 +102,7 @@ module pe_row(
   reg [7:0] out_cycle;
   reg [11:0] done_cycle;
   // Comparator
-  reg [7:0] cmp;
+  reg [15:0] cmp;
   reg [7:0] mi;
   reg [7:0] mj;
   reg [7:0] cmp_mi;
@@ -112,7 +113,6 @@ module pe_row(
   reg q2r;
   reg all_done;
   reg started;
-  reg [7:0]c_reg;
   wire start_init;
   
   // Cycle counters
@@ -125,18 +125,26 @@ module pe_row(
       mi <= -`BLK_SIZE/2;
       mj <= -`BLK_SIZE/2;
       started <= 1'b0;
+      q2r <= 1'b0;
+      pe2s <= 1'b0;
+      //mme <= 1'b0;
+      //m_i <= 1'b0;
+      //m_j <= 1'b0;
     end else begin
       if(start) begin
         started <= 1'b1;
       end
       if(start||started) begin
-        if(in_cycle<`BLK_SIZE-1) begin
+        if(in_cycle<`BLK_SIZE-2) begin
           in_cycle <= in_cycle+1;
           q2r <= 1'b0;
+        end else if(in_cycle==`BLK_SIZE-2)begin
+          in_cycle <= in_cycle+1;
+          q2r <= 1'b1;
         end else begin
           in_cycle <= 8'h0;
           initialized <= 1'b1;
-          q2r <= 1'b1;
+          q2r <= 1'b0;
         end
         if(out_cycle<`BS_SQ-1)begin
           out_cycle <= out_cycle+1;
@@ -164,27 +172,41 @@ module pe_row(
         if(reset==1'b1)begin
           q[i] <= 8'b0;
           r[i] <= 8'b0;
-          s[i] <= 8'b0;
+          s[i] <= 15'b0;
+          s_mi[i] <= 8'h0;
+          s_mj[i] <= 8'h0;
+          s_valid[i] <= 1'b0;
         end else if(start||started) begin
           q[i] <= q[i+1];
           // Parallel shifting Q registers into R registers every `BLK_SIZE -1 cycles
-          if(!q2r)begin
-            r[i] <= r[i+1];
-          end else begin
-            r[i] <= q[i];
-          end
+          //if(initialized) begin
+            if(!q2r)begin
+              r[i] <= r[i+1];
+            end else begin
+              //r[i] <= q[i];
+              r[i] <= q[i+1];
+            end
+          //end else begin
+          //  if(q2r)begin
+          //    r[i] <= q[i+1];
+          //  end
+          //end
           // Parallel shifting PE outputs to S registers every `BS_SQ-1 cycles
           if(!pe2s)begin
             s[i] <= s[i+1];
+            s_mi[i] <= s_mi[i+1];
+            s_mj[i] <= s_mj[i+1];
+            s_valid[i] <= s_valid[i+1];
           end else begin
             s[i]    <= s2[i];
             s_mi[i] <= mi;
             s_mj[i] <= mj+i;
+            s_valid[i] <= 1'b1;
           end
         end
       end
       pe pe_i(
-        .a(c_reg),
+        .a(c),
         .b(r[i]),
         .clk(clk),
         .reset(reset),
@@ -192,36 +214,47 @@ module pe_row(
         .me(s2[i]),
         .done(q_done[i])
       );
-    end  
+    end
   endgenerate
     
   always @ (posedge clk) begin
     if(reset==1'b1)begin
       q[`BLK_SIZE-1] <= 8'b0;
       r[`BLK_SIZE-1] <= 8'b0;
-      s[`BLK_SIZE-1] <= 8'b0;
-      c_reg <= 8'b0;
+      s[`BLK_SIZE-1] <= 15'h0;
+      s_mi[`BLK_SIZE-1] <= 8'h0;
+      s_mj[`BLK_SIZE-1] <= 8'h0;
+      s_valid[`BLK_SIZE-1] <= 1'b0;
     end else if(start||started) begin
       q[`BLK_SIZE-1] <= p;
-      if(!q2r)begin
-        r[`BLK_SIZE-1] <= p_prime;
-      end else begin
-        r[`BLK_SIZE-1] <= q[`BLK_SIZE-1];
-        // p_prime lost during this cycle
-        // buffer? or have control hold for one extra cycle?
-      end
+      //if(initialized) begin
+        if(!q2r)begin
+          r[`BLK_SIZE-1] <= p_prime;
+        end else begin
+          // r[`BLK_SIZE-1] <= q[`BLK_SIZE-1];
+          r[`BLK_SIZE-1] <= p;
+          // p_prime lost during this cycle
+          // buffer? or have control hold for one extra cycle?
+        end
+      //end else begin
+      //  if(!q2r)begin
+      //    r[`BLK_SIZE-1] <= p_prime;
+      //  end else begin
+      //    r[`BLK_SIZE-1] <= p;
+      //  end
+      //end
       if(pe2s)begin
         s[`BLK_SIZE-1] <= s2[`BLK_SIZE-1];
         s_mi[`BLK_SIZE-1] <= mi;
         s_mj[`BLK_SIZE-1] <= `BLK_SIZE/2 -1;
-      end
-      if(start_init)begin
-        c_reg <= c;
+        s_valid[`BLK_SIZE-1] <= 1'b1;
+      end else begin
+        s_valid[`BLK_SIZE-1] <= 1'b0;
       end
     end
   end
     pe pe_last(
-      .a(c_reg),
+      .a(c),
       .b(r[`BLK_SIZE-1]),
       .clk(clk),
       .reset(reset),
@@ -233,10 +266,12 @@ module pe_row(
   //Comparator
   always @ (posedge clk) begin
     if(reset)begin
-      cmp <= 8'h0;
+      cmp <= 15'h7fff;
+      cmp_mi <= 8'h0;
+      cmp_mj <= 8'h0;
     end else begin
       // Comparing for minimum value
-      if(cmp>s[0])begin
+      if(s_valid[0]&& (cmp>s[0]))begin
         cmp <= s[0]; // add valid signal to s to reduce energy
         cmp_mi <= s_mi[0];
         cmp_mj <= s_mj[0];
