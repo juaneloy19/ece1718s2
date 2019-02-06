@@ -20,6 +20,8 @@ extern std::ofstream p_C_cmodel;
 extern std::ofstream p_P_cmodel;
 extern std::ofstream p_P_prime_cmodel;
 
+extern std::ofstream p_PeCost;
+
 
 
 

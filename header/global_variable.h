@@ -10,6 +10,9 @@ std::ofstream p_C_cmodel;
 std::ofstream p_P_cmodel;
 std::ofstream p_P_prime_cmodel;
 
+std::ofstream p_PeCost;
+
+
 
 
 
