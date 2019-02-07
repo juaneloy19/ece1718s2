@@ -94,6 +94,7 @@ module tb();
                 end
                 else begin
                     $display("TEST FAILED on block %d", block_count);
+                    $display("MV_Y:%d MV_X:%d != Expected MV_Y:%d MV_X:%d ", m_i, m_j, MB_Y, MB_X);
                     $finish;
                 end
             @(posedge clk);
