@@ -194,6 +194,12 @@ module Control (
       line_buffer1[count[3:0]] <= rdatRef;
     else if(update_line2)
       line_buffer2[count[3:0]] <= rdatRef;
+    else if (cur_state==IDLE)begin
+      for(i=0; i<4; i=i+1) begin
+        line_buffer1[i] <= 64'd0;
+        line_buffer2[i] <= 64'd0;
+      end
+    end
     else begin
       for(i=0; i<4; i=i+1) begin
           line_buffer1[i] <= line_buffer1[i];
@@ -203,6 +209,8 @@ module Control (
 
     if(count[3:0] == 4'd15)
         switch <= !switch;
+    else if(cur_state==IDLE)
+        switch <=1'd0;
   end
   
   always @(posedge clk) begin
@@ -217,7 +225,13 @@ module Control (
     end
     else if (update_cur2)begin
       Curline_buffer2[count[0]] <= rdatCur;
-    end        
+    end       
+    else if (cur_state == IDLE) begin
+      for(i=0; i<2; i=i+1) begin
+        Curline_buffer1[i] <= 64'd0;
+        Curline_buffer2[i] <= 64'd0;
+      end
+    end 
     else begin
       for(i=0; i<2; i=i+1) begin
         Curline_buffer1[i] <= Curline_buffer1[i];
