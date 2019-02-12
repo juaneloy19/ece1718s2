@@ -1,0 +1,6 @@
+#Instruction to run the c-model
+1.build c-model
+make
+2.run cmodel example
+encode cfg-fore.txt foreman_10-lim_grayscale.yuv
+
