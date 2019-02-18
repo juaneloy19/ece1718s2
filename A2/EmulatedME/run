@@ -1,0 +1,2 @@
+#example to run 
+matlab -nodisplay -nosplash -nodesktop -r "EmuME output_256x256.mp4  output.txt mb.txt grid.txt"
