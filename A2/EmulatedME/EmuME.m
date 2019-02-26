@@ -3,7 +3,8 @@
 
 function EmuME(videoFile, mpegflowOutput, mb_out, grid_out)
     disp("Running MV_EXTRACTOR");
-    command = ['./mpegflow ' videoFile ' --grid8x8' ' >' mpegflowOutput];
+%    command = ['./mpegflow ' videoFile ' --grid8x8' ' >' mpegflowOutput];
+    command = ['./mpegflow ' videoFile  ' >' mpegflowOutput];
     disp(command);
     system(command);
     parse_file(mpegflowOutput, mb_out, grid_out);
@@ -29,9 +30,9 @@ function parse_file(filename, filename1, filename2)
         disp(pic_type);%Picture type
         disp(size);
 	block_count=0;
-        if(strcmp(pic_type, 'pict_type=P'))
-            fprintf(outfile1, '%s\n', frame_num);
-            fprintf(outfile2, '%s\n', frame_num);
+        if(strcmp(pic_type, 'pict_type=P')||strcmp(pic_type, 'pict_type=I'))
+            fprintf(outfile1, '%s %s\n',pic_type, frame_num);
+            fprintf(outfile2, '%s %s\n',pic_type, frame_num);
             disp("P-frame");
             MV_X_TABLE=zeros(height/2,width);
             for i=1:height/2%MVX

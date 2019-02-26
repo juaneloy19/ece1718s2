@@ -1,2 +1,8 @@
-#example to run 
-matlab -nodisplay -nosplash -nodesktop -r "EmuME output_256x256.mp4  output.txt mb.txt grid.txt"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/medium_cfr_14_tears_of_steel_1080pSW.mov output.txt mb.txt medium_cfr_14_tears_of_steel_1080pSW.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/medium_cfr_18_tears_of_steel_1080pSW.mov output.txt mb.txt medium_cfr_18_tears_of_steel_1080pSW.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/veryslow_cfr_14_tears_of_steel_1080pSW.mov output.txt mb.txt veryslow_cfr_14_tears_of_steel_1080pSW.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/veryslow_cfr_18_tears_of_steel_1080pSW.mov output.txt mb.txt veryslow_cfr_18_tears_of_steel_1080pSW.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/quality_quality_qp_i_14_qp_p_14_qp_b_14_tears_of_steel_1080p.mov output.txt mb.txt quality_quality_qp_i_14_qp_p_14_qp_b_14_tears_of_steel_1080p.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/quality_quality_qp_i_18_qp_p_18_qp_b_18_tears_of_steel_1080p.mov output.txt mb.txt quality_quality_qp_i_18_qp_p_18_qp_b_18_tears_of_steel_1080p.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/quality_speed_qp_i_14_qp_p_14_qp_b_14_tears_of_steel_1080p.mov output.txt mb.txt quality_speed_qp_i_14_qp_p_14_qp_b_14_tears_of_steel_1080p.mvs"
+matlab -nodisplay -nosplash -nodesktop -r "EmuME ../clips/quality_speed_qp_i_18_qp_p_18_qp_b_18_tears_of_steel_1080p.mov output.txt mb.txt quality_speed_qp_i_18_qp_p_18_qp_b_18_tears_of_steel_1080p.mvs"
