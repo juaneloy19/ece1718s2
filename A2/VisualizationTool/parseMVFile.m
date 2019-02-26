@@ -1,37 +1,3 @@
-function VisualizationToolMVs(vidInput)
-    v = VideoReader(vidInput);%VideoReader('ffmpeg-20190219-ff03418-win64-static\output.mp4');
-    
-    height = v.height/16;
-    width = v.width/16;
-     
-    frame_count =0;
-    
-    z = zeroMat(height,width);
-
-    fig = figure;
-    colormap('hot');
-    im = imagesc(z);
-    colorbar;
-
-    pt1 = get(gca,'position');
-    currAxes = axes;
-    set(gca,'position',pt1);
-    while hasFrame(v)
-        frame_count= frame_count +1;
-        vidFrame = readFrame(v);
-        z = parseMVFile('test_file.txt', z, frame_count); 
-        colormap(gca,'hot');
-        im = imagesc(z);
-        pt1 = get(gca,'position');
-        currAxes = axes;
-        set(gca,'position',pt1);
-        imv = image(vidFrame, 'Parent', currAxes);
-        imv.AlphaData = 0.5;
-        currAxes.Visible = 'off';
-        pause(1/v.FrameRate);
-    end
-end
-
 function y = parseMVFile(mvFileName,height,width)
     file = fopen(mvFileName, 'rt');
     while ~feof(file)
@@ -79,5 +45,3 @@ function x = zeroMat(height,width)
         end
     end
 end
-    
-    
