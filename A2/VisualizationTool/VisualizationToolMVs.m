@@ -15,7 +15,9 @@ colormap('hot');
 im = imagesc(z);
 colorbar;
 
+pt1 = get(gca,'position');
 currAxes = axes;
+set(gca,'position',pt1);
 while hasFrame(v)
     vidFrame = readFrame(v);
     imv = image(vidFrame, 'Parent', currAxes);
