@@ -24,17 +24,16 @@ function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
         disp(frame_head2);
         A2 = parseMV(mv2ID,mvformat,1);
         
-        
-        if(contains(frame_head1,iframe)||contains(frame_head2,iframe))
-            continue;
-        else
+        A3 = zeros(mbh,mbw);
+        if(~contains(frame_head1,iframe)&&~contains(frame_head2,iframe))
             A1 = reshape(A1,[mbw,mbh]);
             A1 = transpose(A1);
             A2 = reshape(A2,[mbw,mbh]);
             A2 = transpose(A2);
+            A3 = A1 - A2;
         end
         
-        A3 = A1 - A2;
+        
         disp(A3);
         fprintf(diffID,'%s\n',frame_head1);
         for i=1:1:mbh
@@ -43,7 +42,6 @@ function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
             end
             fprintf(diffID,'\n');
         end
-        %write A3 to file
     end
 end
 
