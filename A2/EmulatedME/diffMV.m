@@ -1,4 +1,4 @@
-function diffMV(mvfile1,mvfile2,diffFile)
+function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
     disp("Running diff Motion Vectors");
     fprintf("File 1:%s File 2:%s DiffFile:%s \n",mvfile1,mvfile2,diffFile);
     mvformat = ['(' '%f' ',' '%f' ') '];
@@ -6,28 +6,42 @@ function diffMV(mvfile1,mvfile2,diffFile)
     mv2ID = fopen(mvfile2,'r');
     %open diffFile for reading
     diffID = fopen(diffFile,'w');
+    mbh = height/block;
+    mbw = 2*(width/block);
+    fprintf("%d %d %d",mbh,mbw,mbh*mbw);
+    
+    % String for I frames
+    iframe = "pict_type=I";
     
     %loop for all lines
     while (~feof(mv1ID)&&~feof(mv2ID))
         frame_head1 = fgetl(mv1ID);
         disp(frame_head1);
         A1 = parseMV(mv1ID,mvformat,1);
-        A1 = reshape(A1,[32,16]);
-        A1 = transpose(A1);
+
         
         frame_head2 = fgetl(mv2ID);
         disp(frame_head2);
         A2 = parseMV(mv2ID,mvformat,1);
-        A2 = reshape(A2,[32,16]);
-        A2 = transpose(A2);
+        
+        
+        if(contains(frame_head1,iframe)||contains(frame_head2,iframe))
+            continue;
+        else
+            A1 = reshape(A1,[mbw,mbh]);
+            A1 = transpose(A1);
+            A2 = reshape(A2,[mbw,mbh]);
+            A2 = transpose(A2);
+        end
         
         A3 = A1 - A2;
         disp(A3);
-        fprintf(diffID,'%s %s',frame_head1,frame_head2);
-        for i=1:1:16
-            for j=1:2:32
+        fprintf(diffID,'%s\n',frame_head1);
+        for i=1:1:mbh
+            for j=1:2:mbw
                 fprintf(diffID, '(%f,%f) ', A3(i,j), A3(i,j+1));
             end
+            fprintf(diffID,'\n');
         end
         %write A3 to file
     end
