@@ -1,27 +1,29 @@
-function VisualizationToolMVs(vidInput)
+function VisualizationToolMVs(vidInput, mvfile1, mvfile2, num_frames)
     v = VideoReader(vidInput);%VideoReader('ffmpeg-20190219-ff03418-win64-static\output.mp4');
+    v.CurrentTime = 200;
     
     height = v.height/16;
     width = v.width/16;
      
-    frame_count =0;
+    frame_count =1;
     
-    z = zeroMat(height,width);
+    mv1 = parseMVFile(mvfile1,height,width);
+    mv2 = parseMVFile(mvfile2,height,width);
+    z = absoluteDiffMVs(mv1,mv2,num_frames,height,width);
 
     fig = figure;
     colormap('hot');
-    im = imagesc(z);
+    im = imagesc(cell2mat(z{1,frame_count}));
+    brighten(.5);
     colorbar;
 
     pt1 = get(gca,'position');
     currAxes = axes;
     set(gca,'position',pt1);
-    while hasFrame(v)
-        frame_count= frame_count +1;
+    while (hasFrame(v) & (frame_count <= num_frames)) 
         vidFrame = readFrame(v);
-        z = parseMVFile('test_file.txt', z, frame_count); 
         colormap(gca,'hot');
-        im = imagesc(z);
+        im = imagesc(cell2mat(z{1,frame_count}));
         pt1 = get(gca,'position');
         currAxes = axes;
         set(gca,'position',pt1);
@@ -29,6 +31,7 @@ function VisualizationToolMVs(vidInput)
         imv.AlphaData = 0.5;
         currAxes.Visible = 'off';
         pause(1/v.FrameRate);
+        frame_count= frame_count +1;
     end
 end
 
@@ -36,7 +39,7 @@ function y = parseMVFile(mvFileName,height,width)
     file = fopen(mvFileName, 'rt');
     while ~feof(file)
          line = fgetl(file);
-         if(~isempty(line))
+         if(~isempty(line) & line >= 0)
              header = strsplit(line);
              pic_type = cell2mat(header(1));
              frame_num = cell2mat(header(2));
@@ -79,5 +82,16 @@ function x = zeroMat(height,width)
         end
     end
 end
-    
+
+function y = absoluteDiffMVs(MV_m1, MV_m2, num_frames, height, width)
+    for frame_index = 1:num_frames
+        for row_index = 1: height
+            for column_index = 1:width
+                y{frame_index}{row_index,column_index} = ...
+                    sqrt((MV_m2{1,frame_index}{row_index,column_index}(2) - MV_m1{1,frame_index}{row_index,column_index}(2))^2 ...
+                    + (MV_m2{1,frame_index}{row_index,column_index}(1) - MV_m1{1,frame_index}{row_index,column_index}(1))^2);
+            end
+        end
+    end
+end
     
