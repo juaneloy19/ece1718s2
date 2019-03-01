@@ -1,13 +1,35 @@
 function calcQualityMVs(mvfile1, mvfile2, num_frames,height, width)
     mv1 = parseMVFile(mvfile1,height,width);
     mv2 = parseMVFile(mvfile2,height,width);
-    [z,meanAbsDiff] = absoluteDiffMVs(mv1,mv2,num_frames,height,width);
-    disp(meanAbsDiff);
+    [z,meanAbsDiff,sumXdiff,sumYdiff,sumXMv1,sumYMv1,sumXMv2,sumYMv2] = absoluteDiffMVs(mv1,mv2,num_frames,height,width);
+    output_str = ['meanAbsDiff = ', num2str(meanAbsDiff)];
+    disp(output_str);
+    output_str = ['sumXdiff = ', num2str(sumXdiff)];
+    disp(output_str);
+    output_str = ['sumYdiff = ', num2str(sumYdiff)];
+    disp(output_str);
+    output_str = ['sumXMv1 = ', num2str(sumXMv1)];
+    disp(output_str);
+    output_str = ['sumYMv1 = ', num2str(sumYMv1)];
+    disp(output_str);
+    output_str = ['sumXMv2 = ', num2str(sumXMv2)];
+    disp(output_str);
+    output_str = ['sumYMv2 = ', num2str(sumYMv2)];
+    disp(output_str);
 end
 
-function [y,meanAbsdiff] = absoluteDiffMVs(MV_m1, MV_m2, num_frames, height, width)
+function [y,meanAbsdiff,sumXdiff,sumYdiff,sumXMv1,sumYMv1,sumXMv2,sumYMv2] = absoluteDiffMVs(MV_m1, MV_m2, num_frames, height, width)
+   
+    %Variables to keep track of motion vector sumations
     sumAbsDiff = 0;
     mvIndex = 0;
+    sumXdiff = 0;
+    sumYdiff = 0;
+    sumXMv1 = 0;
+    sumYMv1 = 0;
+    sumXMv2 = 0;
+    sumYMv2 = 0;
+   
     for frame_index = 1:num_frames
         for row_index = 1: height
             for column_index = 1:width
@@ -15,11 +37,17 @@ function [y,meanAbsdiff] = absoluteDiffMVs(MV_m1, MV_m2, num_frames, height, wid
                     sqrt((MV_m2{1,frame_index}{row_index,column_index}(2) - MV_m1{1,frame_index}{row_index,column_index}(2))^2 ...
                     + (MV_m2{1,frame_index}{row_index,column_index}(1) - MV_m1{1,frame_index}{row_index,column_index}(1))^2);
                 sumAbsDiff = sumAbsDiff + y{frame_index}{row_index,column_index};
+                sumXMv1 = sumXMv1 + MV_m1{1,frame_index}{row_index,column_index}(1);
+                sumYMv1 = sumYMv1 + MV_m1{1,frame_index}{row_index,column_index}(2);
+                sumXMv2 = sumXMv2 + MV_m2{1,frame_index}{row_index,column_index}(1);
+                sumYMv2 = sumYMv2 + MV_m2{1,frame_index}{row_index,column_index}(2);
                 mvIndex = mvIndex + 1;
             end
         end
     end
     meanAbsdiff = sumAbsDiff/mvIndex;
+    sumXdiff = sumXMv2 - sumXMv1;
+    sumYdiff = sumYMv2 - sumYMv1;
 end
 
 function y = parseMVFile(mvFileName,height,width)
