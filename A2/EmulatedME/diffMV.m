@@ -8,7 +8,7 @@ function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
     diffID = fopen(diffFile,'w');
     mbh = height/block;
     mbw = 2*(width/block);
-    fprintf("%d %d %d",mbh,mbw,mbh*mbw);
+    %fprintf("%d %d %d",mbh,mbw,mbh*mbw);
     
     % String for I frames
     iframe = "pict_type=I";
@@ -17,12 +17,12 @@ function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
     while (~feof(mv1ID)&&~feof(mv2ID))
         frame_head1 = fgetl(mv1ID);
         disp(frame_head1);
-        A1 = parseMV(mv1ID,mvformat,1);
+        A1 = parseMV(mv1ID,mvformat);
 
         
         frame_head2 = fgetl(mv2ID);
         disp(frame_head2);
-        A2 = parseMV(mv2ID,mvformat,1);
+        A2 = parseMV(mv2ID,mvformat);
         
         A3 = zeros(mbh,mbw);
         if(~contains(frame_head1,iframe)&&~contains(frame_head2,iframe))
@@ -34,7 +34,7 @@ function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
         end
         
         
-        disp(A3);
+        %disp(A3);
         fprintf(diffID,'%s\n',frame_head1);
         for i=1:1:mbh
             for j=1:2:mbw
@@ -45,7 +45,7 @@ function diffMV(mvfile1,mvfile2,diffFile,height,width,block)
     end
 end
 
-function vec = parseMV(mvfile,format,index)
+function vec = parseMV(mvfile,format)
     [vec,count] = fscanf(mvfile, format);
-    fprintf("Read row %d with %d elements\n", index,count);
+    %fprintf("Read row %d with %d elements\n", index,count);
 end
