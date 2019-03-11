@@ -3,15 +3,10 @@ import cv2
 import re
 import numpy as np
 
-def initVideoFrame(frame):
-	ysp,xsp,chan = frame.shape
-	copy = frame
-	cv2.rectangle( copy, ( 0,0 ), ( xsp, ysp), ( 0,0,0 ),-1,8)
-	return copy
-
 infile = sys.argv[1]
 outfile = sys.argv[2]
 mvfile = sys.argv[3]
+mbfile = sys.argv[4]
 block_size = 16 # Can make input arg
 print ("Input: "+infile+" Output: "+outfile+" MV: "+mvfile)
 
@@ -21,6 +16,7 @@ cap = cv2.VideoCapture(infile)
 fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
 out = cv2.VideoWriter()
 mv = open(mvfile,'r')
+mb = open(mbfile,'r')
 
  
 if (cap.isOpened()== False): 
@@ -35,8 +31,21 @@ print ("W = "+str(width)+" H = "+str(height) + " FPS = "+str(fps))
 mbw = int(width/block_size)
 mbh = int(height/block_size)
 o_work = out.open(outfile,fourcc,fps*2,(width,height),True)
-num_frames = frames
+#num_frames = 4
+num_frames = int(frames/4)
 print("MBH = "+str(mbh)+" MBW = "+str(mbw))
+
+if(mb.closed == True):
+	print("Error opening Mb Type file");
+	sys.exit(1);
+if(mv.close == True):
+	print("Error opening Mv Type file");
+	sys.exit(1);
+
+# Prepare to parse Mb Type file
+frame_line_pattern = re.compile("^\[h264 @.*\] ");
+lib_line_pattern = re.compile("^\[libx264 @.*\] ");
+frame_head_pattern = "New frame";
 
 ret,next_frame = cap.read()
 ysp,xsp,chan = next_frame.shape
@@ -46,18 +55,22 @@ for frame_num in range (1,num_frames-1):
 	# Get current frame
 	print("Frame"+str(frame_num))
 	frame = next_frame
+	out.write(frame)
 	ret,next_frame = cap.read()
 	# Parse motion vector file
 	# Get frame info
 	frame_header = mv.readline()
 	print("Frame head: "+frame_header)
+	mb_line = mb.readline();
+	#if(frame_head_pattern not in mb_line): mb_line = mb.readline()
+	print("Frame Mb head: "+mb_line)
 	# check that it's not an I frame
 	up_frame_valid = np.zeros((ysp,xsp))
 	for mvs in range (0,mbh):
 		# Get motion vectors
 		line = mv.readline()
 		line.rstrip("\n")
-		print("Row: "+str(mvs))
+		#print("Row: "+str(mvs))
 		#print("Line:"+line)
 		nums = re.split('[, \)\(]',line)
 		nums.remove('\n')
@@ -65,25 +78,26 @@ for frame_num in range (1,num_frames-1):
 		nums = list(map(float,nums))
 		nums = list(map(int,nums))
 		#print(nums)
-		print(len(nums))
-		mv_x = nums[::2]
-		mv_y = nums[1::2]
-		print("MVX = "+str(len(mv_x)))
-		print("MVY = "+str(len(mv_y)))
-		up_frame = frame
-		#input("Press Enter to continue...")
-		#cv2.imshow('Frame',frame)
-		#cv2.waitKey()
-		#input("Press Enter to continue...")
-		#cv2.imshow('UpFrame',up_frame)
-		#cv2.waitKey()
-		#cv2.rectangle( up_frame, ( 0,0 ), ( xsp, ysp), ( 0,0,0 ),-1,8)
+		#print(len(nums))
+		mv_x = nums[1::2]
+		mv_y = nums[::2]
+		#print("MVX = "+str(len(mv_x)))
+		#print("MVY = "+str(len(mv_y)))
+		up_frame = frame.copy()
+		# Get Mb types
+		mb_line = mb.readline()
+		#if( not frame_line_pattern.match(mb_line)): mb.readline();
+		mb_info = re.sub(frame_line_pattern,'',mb_line);
+		mb_types = re.findall('...',mb_info);
+		#print (str(mvs)+" : "+ str(len(mb_types)));
 		# Modify blocks in up converted frame corresponding to this line
 		for block in range (0,mbw):
 			# Going through each pixel of block
 			for j in range (0,block_size):
 				jy = (mvs*block_size)+j
 				uy = jy+int(mv_y[block]/2)
+				#curr_mb = mb_types[block]
+				#print(mb_types[block])
 				for i in range (0,block_size):
 					ix = (block*block_size)+i
 					ux = ix+int(mv_x[block]/2)
@@ -97,25 +111,35 @@ for frame_num in range (1,num_frames-1):
 	for mvs in range (0,mbh):
 		for block in range (0,mbw):
 			# Going through each pixel of block
+			curr_mb = mb_types[block][0]
 			for j in range (0,block_size):
 				jy = (mvs*block_size)+j
+				uy = jy-int(mv_y[block]/2)
 				for i in range (0,block_size):
 					ix = (block*block_size)+i
+					ux = ix-int(mv_x[block]/2)
 					#print("X: "+str(ix)+"Y: "+str(jy))
-					if(up_frame_valid[jy][ix] == 0):
-						# handle blanks
-						#up_frame[jy][ix] = frame[jy][ix]
-						up_frame[jy][ix] = [0,0,0]
-						#up_frame[i][j] = next_frame[i][j] #try this?
-					elif (up_frame_valid[jy][ix] > 1):
-						# handle overlaps
-						up_frame[jy][ix] = [0,0,0]
-						#up_frame[jy][ix] = next_frame[jy][ix]
+					if((0<=(ux)<xsp)and(0<=(uy)<ysp)):
+						if(up_frame_valid[jy][ix] == 0):
+							# handle blanks
+							#up_frame[jy][ix] = frame[jy][ix]
+							#up_frame[jy][ix] = [255,255,255]
+							if(curr_mb == 'i' or curr_mb == 'I'):
+								up_frame[jy][ix] = frame[jy][ix]
+							else:
+								up_frame[uy][ux] = next_frame[jy][ix] #try this?
+						elif (up_frame_valid[jy][ix] > 1):
+								# handle overlaps
+								#up_frame[jy][ix] = [0,255,0]
+								if(curr_mb == 'i' or curr_mb == 'I'):
+									up_frame[jy][ix] = frame[jy][ix]
+								else:
+									up_frame[uy][ux] = next_frame[jy][ix]
 	#print("Writing current frame")
 	#input("Press Enter to continue...")
 	#cv2.imshow('Frame',frame)
 	#cv2.waitKey()
-	out.write(frame)
+	#out.write(frame)
 	#print("Writing rate up frame")
 	#input("Press Enter to continue...")
 	#cv2.imshow('UPFrame',up_frame)
