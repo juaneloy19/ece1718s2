@@ -1,3 +1,4 @@
+#bash upconvert.sh <input mp4> <some outputmp4 for macroblock report> <actual output for upconverted mp4> <mvsfile> <macroblock report>
 ifile=$1
 ofile1=$2
 ofile2=$3
