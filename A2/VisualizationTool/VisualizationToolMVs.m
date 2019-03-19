@@ -1,6 +1,6 @@
 function VisualizationToolMVs(vidInput, mvfile1, mvfile2, num_frames)
     v = VideoReader(vidInput);%VideoReader('ffmpeg-20190219-ff03418-win64-static\output.mp4');
-    v.CurrentTime = 200;
+    %v.CurrentTime = 200;
     
     height = v.height/16;
     width = v.width/16;
@@ -16,6 +16,8 @@ function VisualizationToolMVs(vidInput, mvfile1, mvfile2, num_frames)
     im = imagesc(cell2mat(z{1,frame_count}));
     brighten(.5);
     colorbar;
+    lim = caxis;
+    caxis([0 max(cell2mat(z{1,2}(:)))]);
 
     pt1 = get(gca,'position');
     currAxes = axes;
@@ -24,6 +26,7 @@ function VisualizationToolMVs(vidInput, mvfile1, mvfile2, num_frames)
         vidFrame = readFrame(v);
         colormap(gca,'hot');
         im = imagesc(cell2mat(z{1,frame_count}));
+        caxis([0 max(cell2mat(z{1,frame_count}(:)))]);
         pt1 = get(gca,'position');
         currAxes = axes;
         set(gca,'position',pt1);
