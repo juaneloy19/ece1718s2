@@ -54,7 +54,7 @@ print("XSP: "+str(xsp)+" YSP: "+str(ysp)+" Chan: "+str(chan))
 for frame_num in range (1,num_frames-1):
 	# Get current frame
 	print("Frame"+str(frame_num))
-	frame = next_frame
+	frame = next_frame.copy()
 	out.write(frame)
 	ret,next_frame = cap.read()
 	# Parse motion vector file

@@ -14,8 +14,8 @@ print ("Input MP4: "+infile+" Output MP4: "+outfile+" Input MVS: "+inmvsfile+"Ou
 cap = cv2.VideoCapture(infile)
 fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
 out = cv2.VideoWriter()
-mv = open(mvfile,'r')
-mv_o = open(mvfile,'w')
+mv = open(inmvsfile,'r')
+mv_o = open(outmvsfile,'w')
  
 if (cap.isOpened()== False): 
   print("Error opening input video stream or file")
@@ -30,24 +30,23 @@ print ("W = "+str(width)+" H = "+str(height) + " FPS = "+str(fps) + " Frames = "
 o_work = out.open(outfile,fourcc,fps/2,(width,height),True)
 num_frames = frames
 
-ret,frame = cap.read()
-out.write(frame)
-
-for i in range (1,num_frames):
+for i in range (0,num_frames):
 	ret,frame = cap.read()
 	if (i%2==0):
 		out.write(frame)
 
-for frame_num in range (0,num_frames-1):
+block_size = 16
+mbh = int(height/block_size)
+for frame_num in range (0,num_frames):
 	# Get frame info
 	frame_header = mv.readline()
 	print("Frame head: "+frame_header)
 	if(frame_num%2==0):
-		outmvsfile.write(frame_header)
+		mv_o.write(frame_header)
 	for mvs in range (0,mbh):
 		mv_line = mv.readline()
 		if(frame_num%2==0):
-			outmvsfile.write(frame_header)
+			mv_o.write(mv_line)
 
 cap.release()
 out.release()

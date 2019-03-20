@@ -19,15 +19,13 @@ if (cap.isOpened()== False):
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps = int(cap.get(cv2.CAP_PROP_FPS))
-print ("W = "+str(width)+" H = "+str(height) + " FPS = "+str(fps))
+frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+print ("W = "+str(width)+" H = "+str(height) + " FPS = "+str(fps) + " Frames = "+str(frames))
 
 o_work = out.open(outfile,fourcc,fps/2,(width,height),True)
-num_frames = 120
+num_frames = frames
 
-ret,frame = cap.read()
-out.write(frame)
-
-for i in range (1,120):
+for i in range (0,frames):
   ret,frame = cap.read()
   if (i%2==0):
     out.write(frame)
